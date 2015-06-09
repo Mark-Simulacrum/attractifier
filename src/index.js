@@ -8,6 +8,12 @@ import CodeGenerator from "./CodeGenerator";
 import InputStream from "./InputStream";
 
 const inputFile = process.argv[2];
+
+if (!inputFile) {
+    process.stderr.write("Usage: node ./lib/index.js FILE\n");
+    process.exit(1);
+}
+
 log("started reading from inputFile");
 let input = fs.readFileSync(inputFile).toString();
 let tokens = [];
