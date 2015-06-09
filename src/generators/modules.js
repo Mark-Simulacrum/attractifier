@@ -130,13 +130,16 @@ export function ExportAllDeclaration(node) {
 
     this.print(node.source);
 
-    this.ensureSemicolon();
+    this.ensureVoid();
+    this.ensure(";");
 }
 
 export function ExportNamedDeclaration(node) {
     this.ensure("export");
     this.ensureSpace();
+
     ExportDeclaration.call(this, node);
+
     if (this.isNext(";")) {
         this.ensureVoid();
         this.ensure(";");
