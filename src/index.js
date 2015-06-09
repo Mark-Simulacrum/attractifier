@@ -6,13 +6,16 @@ import {parse} from "babel-core";
 import CodeGenerator from "./CodeGenerator";
 import InputStream from "./InputStream";
 
+function log(...messages) {
+    fs.write(3, messages.join("") + "\n");
+}
+
 const inputFile = process.argv[2];
-const outputFile = process.argv[3];
-console.log("started reading from inputFile");
+log("started reading from inputFile");
 let input = fs.readFileSync(inputFile).toString();
 let tokens = [];
 let semicolons = [];
-console.log("started parsing input");
+log("started parsing input");
 let ast = parse(input, {
     onToken: tokens,
     onInsertedSemicolon(semicolon) {
@@ -21,7 +24,7 @@ let ast = parse(input, {
     preserveParens: true
 });
 
-console.log("finished parsing input (length: " + input.length + ")");
+log("finished parsing input (length: " + input.length + ")");
 
 const WriteFile = "DEBUG" in process.env;
 function writeString(stringName, string) {
@@ -59,11 +62,11 @@ function addToken(start, end) {
 
     if (semicolons.length && start < semicolons[0] && semicolons[0] <= end) {
         let semiColonPos = semicolons.shift() - start;
-        console.log("inserting semicolon @", semiColonPos + start);
+        log("inserting semicolon @", semiColonPos + start);
         modifiedTokens.push("");
         modifiedTokens.push(";");
     } else if (semicolons.length) {
-        console.log(`not inserting semicolon between ${start} and ${end}, semicolon is ${semicolons[0]}`)
+        log(`not inserting semicolon between ${start} and ${end}, semicolon is ${semicolons[0]}`)
     }
 }
 
@@ -72,7 +75,7 @@ let modifiedTokens = [];
 const everyPercent = Math.round(tokens.length / 100) * 5;
 let percentNum = 0;
 for (let i = 0; i < tokens.length; i++) {
-        if (i % everyPercent === 0) console.log(`finished ${percentNum++}%`)
+        if (i % everyPercent === 0) log(`finished ${percentNum++}%`)
 
         let token = tokens[i];
         let { start, end } = token;
@@ -99,15 +102,14 @@ if (WriteFile) {
     writeString("ast.js", require("util").inspect(ast, { depth: 50 }));
 }
 
-console.log("Init CodeGenerator");
+log("Init CodeGenerator");
 let generator = new CodeGenerator(ast, input, modifiedTokens);
-console.log("Initialized CodeGenerator");
+log("Initialized CodeGenerator");
 
 try {
     let out = generator.generate();
 } catch (error) {
-    writeString(outputFile, generator.out);
     throw error;
 }
 
-fs.writeFileSync(outputFile, generator.out);
+process.stdout.write(generator.out);

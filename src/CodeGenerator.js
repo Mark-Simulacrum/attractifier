@@ -1,3 +1,4 @@
+import fs from "fs";
 import assert from "assert";
 import util from "util";
 import repeat from "lodash.repeat";
@@ -61,7 +62,7 @@ export default class CodeGenerator {
     }
 
     log(...messages) {
-        process.stdout.write(
+        fs.write(3,
             repeat(" ", this.parents.length * 4) +
             `At ${this.getPosition().getString()}: ` +
             fastJoin(fastJoin(messages, " ").split("\n"), "\\n") +
