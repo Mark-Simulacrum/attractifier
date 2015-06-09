@@ -2,9 +2,7 @@ import {isGreyspace} from "../utils";
 import assert from "assert";
 
 export function Identifier(node) {
-    assert(this.iterator.current() === node.name);
-    this.push(node.name);
-    this.iterator.advanceUnlessAtEnd();
+    this.ensure(node.name);
 }
 
 export function Literal(node) {
