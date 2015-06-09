@@ -168,8 +168,6 @@ function ExportDeclaration(node) {
             for (let [index, specifier] of node.specifiers.entries()) {
                 let isLast = index + 1 === node.specifiers.length;
 
-                process.stdout.write("\n");
-
                 if (this.isCurrent("{")) {
 
                     this.ensure("{");
