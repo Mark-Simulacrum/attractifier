@@ -96,6 +96,17 @@ export default class CodeGenerator {
     generate() {
         this.print(this.ast);
 
+        let lines = this.out.split("\n");
+        lines = lines.map(line => {
+            if (/^[^\S\n]*$/.test(line)) {
+                return "";
+            } else {
+                return line;
+            }
+        });
+
+        this.out = fastJoin(lines, "\n");
+
         return this.out;
     }
 
