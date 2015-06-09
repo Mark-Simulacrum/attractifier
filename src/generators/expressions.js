@@ -26,7 +26,7 @@ export function MemberExpression(node) {
 export function ArrayExpression(node) {
     const ContainsNewlines = this.nodeContainsNewlines(node);
 
-    this._printContainedList("[", node.elements, "]", { newlines: false });
+    this._printContainedList("[", node.elements, "]", { newlines: false, wrapSpaces: true });
 }
 
 export function AssignmentExpression(node) {
@@ -44,7 +44,7 @@ export { AssignmentExpression as AssignmentPattern };
 
 export function ObjectExpression(node) {
     this._printContainedList("{", node.properties, "}",
-        { newlines: this.nodeContainsNewlines(node) });
+        { newlines: this.nodeContainsNewlines(node), wrapSpaces: true });
 }
 
 export { ObjectExpression as ObjectPattern };

@@ -58,7 +58,7 @@ export function _printList(array, { separator = ",", newlines = false } = {}) {
 }
 
 export function _printContainedList(
-    open, list, close, { newlines = false } = {}) {
+    open, list, close, { newlines = false, wrapSpaces = false } = {}) {
 
     this.ensure(open);
 
@@ -66,6 +66,8 @@ export function _printContainedList(
         if (newlines) {
             this.ensureNewline();
             this.indent();
+        } else if (wrapSpaces) {
+            this.ensureSpace();
         } else {
             this.ensureVoid();
         }
@@ -102,6 +104,8 @@ export function _printContainedList(
         if (newlines) {
             this.dedent();
             this.ensureNewline();
+        } else if (wrapSpaces) {
+            this.ensureSpace();
         } else {
             this.ensureVoid();
         }
