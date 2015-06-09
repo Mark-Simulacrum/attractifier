@@ -1,17 +1,5 @@
 export function CallExpression(node) {
-    const IsCalleeFunction = this.isFunction(node.callee);
-
-    if (IsCalleeFunction) {
-        // If assignment expression, may have been consumed
-        this._optionalParenOpen();
-    }
-
     this.print(node.callee);
-
-    if (IsCalleeFunction) {
-        this.ensureVoid();
-        this.ensure(")");
-    }
 
     this.ensureVoid();
 
