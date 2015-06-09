@@ -1,4 +1,3 @@
-require("source-map-support").install();
 import assert from "assert";
 import fs from "fs";
 
@@ -7,7 +6,8 @@ import {parse} from "babel-core";
 import CodeGenerator from "./CodeGenerator";
 import InputStream from "./InputStream";
 
-let inputFile = process.argv[2];
+const inputFile = process.argv[2];
+const outputFile = process.argv[3];
 console.log("started reading from inputFile");
 let input = fs.readFileSync(inputFile).toString();
 let tokens = [];
@@ -102,11 +102,12 @@ if (WriteFile) {
 console.log("Init CodeGenerator");
 let generator = new CodeGenerator(ast, input, modifiedTokens);
 console.log("Initialized CodeGenerator");
+
 try {
     let out = generator.generate();
 } catch (error) {
-    writeString("generator-out.js", generator.out);
+    writeString(outputFile, generator.out);
     throw error;
 }
 
-writeString("generator-out.js", generator.out);
+writeString(outputFile, generator.out);
