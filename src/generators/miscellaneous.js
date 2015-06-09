@@ -3,3 +3,7 @@ export function RestElement(node) {
     this.ensureVoid();
     this.print(node.argument);
 }
+
+export function SpreadElement(node) {
+    RestElement.call(this, node);
+}
