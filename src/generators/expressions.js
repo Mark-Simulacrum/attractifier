@@ -78,7 +78,6 @@ export function Property(node) {
             }
 
             this.print(node.key);
-            this.ensureVoid();
 
             if (node.shorthand) {
                 if (this.isIdentifier(node.key) &&
@@ -86,6 +85,8 @@ export function Property(node) {
                     node.key.name === node.value.name) {
                     return;
                 }
+            } else {
+                this.ensureVoid();
             }
         }
 
