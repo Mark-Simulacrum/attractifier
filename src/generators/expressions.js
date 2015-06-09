@@ -47,6 +47,8 @@ export function ObjectExpression(node) {
         { newlines: this.nodeContainsNewlines(node) });
 }
 
+export { ObjectExpression as ObjectPattern };
+
 export function Property(node) {
     if (node.method || node.kind === "get" || node.kind === "set") {
         if (node.kind === "get" || node.kind === "set") {
@@ -57,27 +59,36 @@ export function Property(node) {
         this.print(node.key);
         this.ensureVoid();
         this.print(node.value);
-    } else if (node.shorthand) {
-        this.print(node.key);
-    } else if (node.computed) {
-        this.ensure("[");
-        this.ensureVoid();
-        this.print(node.key);
-        this.ensureVoid();
-        this.ensure("]");
-        this.ensureVoid();
-        this.ensure(":");
-        this.ensureSpace();
+    } else {
+        if (node.computed) {
+            this.ensure("[");
+            this.ensureVoid();
 
-        if (node.kind !== "init") {
-            this.ensure(node.kind);
-            this.ensure(" ");
+            this.print(node.key);
+
+            this.ensureVoid();
+            this.ensure("]");
+            this.ensureVoid();
+        } else {
+            if (this.isAssignmentPattern(node.value) &&
+                this.isIdentifier(node.key) &&
+                node.key.name === node.value.left.name) {
+                this.print(node.value);
+                return;
+            }
+
+            this.print(node.key);
+            this.ensureVoid();
+
+            if (node.shorthand) {
+                if (this.isIdentifier(node.key) &&
+                    this.isIdentifier(node.value) &&
+                    node.key.name === node.value.name) {
+                    return;
+                }
+            }
         }
 
-        this.print(node.value);
-    } else {
-        this.print(node.key);
-        this.ensureVoid();
         this.ensure(":");
         this.ensureSpace();
 
