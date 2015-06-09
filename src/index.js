@@ -3,12 +3,9 @@ import fs from "fs";
 
 import {parse} from "babel-core";
 
+import {log} from "./utils";
 import CodeGenerator from "./CodeGenerator";
 import InputStream from "./InputStream";
-
-function log(...messages) {
-    fs.write(3, messages.join("") + "\n");
-}
 
 const inputFile = process.argv[2];
 log("started reading from inputFile");

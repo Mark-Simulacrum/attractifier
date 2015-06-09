@@ -6,7 +6,7 @@ import each from "lodash.foreach";
 
 import InputStream from "./InputStream";
 import Iterator from "./iterator";
-import {isGreyspace} from "./utils";
+import {isGreyspace, log} from "./utils";
 
 class Position {
     constructor(string) {
@@ -62,11 +62,9 @@ export default class CodeGenerator {
     }
 
     log(...messages) {
-        fs.write(3,
-            repeat(" ", this.parents.length * 4) +
-            `At ${this.getPosition().getString()}: ` +
-            fastJoin(fastJoin(messages, " ").split("\n"), "\\n") +
-            "\n"
+        log(repeat(" ", this.parents.length * 4),
+            `At ${this.getPosition().getString()}: `,
+            fastJoin(fastJoin(messages, " ").split("\n"), "\\n")
         );
     }
 
@@ -264,8 +262,9 @@ export default class CodeGenerator {
 
             this.currentNode = parent;
         } else {
-            console.log(util.inspect(node, {depth: 2}));
-            this.croak("cannot handle printing type: " + node.type);
+            let inspection = util.inspect(node, {depth: 2});
+            this.croak("cannot handle printing type: " + node.type +
+                "\n" + inspection);
         }
 
         this.parents.pop(this.currentNode);
