@@ -23,10 +23,10 @@ let ast = parse(input, {
 
 console.log("finished parsing input (length: " + input.length + ")");
 
-const WriteFile = true;
+const WriteFile = "DEBUG" in process.env;
 function writeString(stringName, string) {
     if (WriteFile) {
-        fs.writeFileSync(`output/${stringName}`, string);
+        fs.writeFileSync(stringName, string);
         process.stdout.write(`wrote ${stringName}.\n`)
     }
 }
@@ -110,4 +110,4 @@ try {
     throw error;
 }
 
-writeString(outputFile, generator.out);
+fs.writeFileSync(outputFile, generator.out);
