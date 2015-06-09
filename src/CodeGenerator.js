@@ -273,9 +273,7 @@ export default class CodeGenerator {
 
             this.currentNode = parent;
         } else {
-            let inspection = util.inspect(node, {depth: 2});
-            this.croak("cannot handle printing type: " + node.type +
-                "\n" + inspection);
+            this.croak("cannot handle printing type: " + node.type);
         }
 
         this.parents.pop(this.currentNode);
