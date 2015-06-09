@@ -9,6 +9,9 @@ export function isGreyspace(string) {
         return true;
     }
 
+    if (string === undefined || string === null)
+        throw new Error("passed undefined or null to isGreyspace");
+
     let stream = new InputStream(string);
 
     while (!stream.atEnd()) {

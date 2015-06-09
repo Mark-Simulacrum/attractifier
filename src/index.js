@@ -3,7 +3,7 @@ import fs from "fs";
 
 import {parse} from "babel-core";
 
-import {log} from "./utils";
+import {log, isGreyspace} from "./utils";
 import CodeGenerator from "./CodeGenerator";
 import InputStream from "./InputStream";
 
@@ -33,24 +33,11 @@ const WriteFile = "DEBUG" in process.env;
 function writeString(stringName, string) {
     if (WriteFile) {
         fs.writeFileSync(stringName, string);
-        process.stdout.write(`wrote ${stringName}.\n`)
+        log(`wrote ${stringName}.\n`)
     }
 }
 
 writeString("original-tokens.json", JSON.stringify(tokens, null, 4));
-
-function isGreyspace(string) {
-    let stream = new InputStream(string);
-
-    while (!stream.atEnd()) {
-        let consumed = stream.consume(/\s+/) ||
-            stream.consume(/\/\/[^\n]*/) ||
-            stream.consume(/\/\*[\W\S]*?\*\//);
-        if (!consumed) return false;
-    }
-
-    return stream.atEnd();
-}
 
 function addToken(start, end) {
     let token = input.slice(start, end);
@@ -94,7 +81,7 @@ for (let i = 0; i < tokens.length; i++) {
         lastTokenEnd = end;
 }
 
-if (!isGreyspace(modifiedTokens[modifiedTokens.length - 1])) {
+if (modifiedTokens[modifiedTokens.length - 1] && !isGreyspace(modifiedTokens[modifiedTokens.length - 1])) {
     modifiedTokens.push("");
 }
 
