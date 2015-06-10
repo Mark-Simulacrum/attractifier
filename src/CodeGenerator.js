@@ -304,7 +304,7 @@ export default class CodeGenerator {
     }
 }
 
-import * as generators from "./generators/base";
+import * as generators from "./generators";
 for (let generatorName of Object.keys(generators)) {
     CodeGenerator.prototype[`is${generatorName}`] = function (node) {
         this.log(`is${generatorName}(): ${node && node.type === generatorName}`);
