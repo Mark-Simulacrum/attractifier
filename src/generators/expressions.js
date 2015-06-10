@@ -29,6 +29,8 @@ export function ArrayExpression(node) {
     this._printContainedList("[", node.elements, "]", { newlines: false, wrapSpaces: true });
 }
 
+export { ArrayExpression as ArrayPattern };
+
 export function AssignmentExpression(node) {
     this.print(node.left);
     this._printFlow(node.left);
