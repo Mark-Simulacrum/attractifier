@@ -58,7 +58,7 @@ export function _printList(array, { separator = ",", newlines = false } = {}) {
 }
 
 export function _printContainedList(
-    open, list, close, { newlines = false, wrapSpaces = false } = {}) {
+    open, list, close, { newlines = false, wrapSpaces = false, allowTrailingComma = true } = {}) {
 
     this.ensure(open);
 
@@ -89,14 +89,19 @@ export function _printContainedList(
                 this.print(element.typeAnnotation);
             }
 
-            if (i + 1 !== len) {
+            const isLast = i + 1 === len;
+            let printComma = !isLast || (allowTrailingComma && this.isNext(","));
+
+            if (printComma) {
                 this.ensureVoid();
                 this.ensure(",");
 
-                if (newlines) {
-                    this.ensureNewline();
-                } else {
-                    this.ensureSpace();
+                if (!isLast) {
+                    if (newlines) {
+                        this.ensureNewline();
+                    } else {
+                        this.ensureSpace();
+                    }
                 }
             }
         }
