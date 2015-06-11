@@ -231,7 +231,7 @@ export default class CodeGenerator {
 
     ensureSpace() {
         let current = this.iterator.current();
-        this.log(`ensureSpace(): "${current}"`.replace(/\n/g, "\\n"));
+        this.log(`ensureSpace(): "${current}"`);
 
         // current is whitespace (not including newlines)
         if (/^[^\S\n]*$/.test(current)) {
@@ -243,7 +243,7 @@ export default class CodeGenerator {
                     )
                 );
         } else {
-            this.croak(`ensuring space with not a space: "${current}"`.replace((/\n/g, "\\n")));
+            this.croak(`ensuring space with not a space: "${current}"`);
         }
 
         this.iterator.advanceUnlessAtEnd();
@@ -254,13 +254,13 @@ export default class CodeGenerator {
 
         // current is whitespace (not including newlines)
         if (/^\s*$/.test(current)) {
-            this.log(`ensureVoid(""): "${current}"`.replace(/\n/g, "\\n"));
+            this.log(`ensureVoid(""): "${current}"`);
             this.push("");
         } else if (isGreyspace(current)) {
-            this.log(`ensureVoid(Greyspace): "${current}"`.replace(/\n/g, "\\n"));
+            this.log(`ensureVoid(Greyspace): "${current}"`);
             this.push(this.ensureIndentation(current));
         } else {
-            this.log(`ensureVoid(): "${current}"`.replace(/\n/g, "\\n"));
+            this.log(`ensureVoid(): "${current}"`);
             this.croak("unhandled case in ensureVoid");
         }
 
