@@ -51,16 +51,14 @@ export default class CodeGenerator {
     log(...messages) {
         let times = Object.keys(this.stoppedTimes).map(task => {
             let time = this.stoppedTimes[task];
-            return `\n${task} took ${prettyTime(time)}`;
+            return `${task} took ${prettyTime(time)}`;
         });
 
-        let posMessage = `At ${this.getPositionMessage()}: `;
-
-        log(repeat(" ", this.parents.length * 4),
-            posMessage,
-            fastJoin(fastJoin(messages, " ").split("\n"), "\\n"),
-            repeat(" ", posMessage.length),
-            ...times);
+        const indentation = repeat(" ", this.parents.length * 4);
+        log(indentation +
+            `At ${this.getPositionMessage()}:`,
+            fastJoin(fastJoin(messages, " ").split("\n"), "\\n") +
+            "\n" + indentation + fastJoin(times, "\n" + indentation));
 
         this.stoppedTimes = {};
     }
