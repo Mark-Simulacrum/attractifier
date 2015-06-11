@@ -150,11 +150,11 @@ export default class CodeGenerator {
 
         let lines = this.out.split("\n");
         lines = lines.map(line => {
-            if (/^[^\S\n]*$/.test(line)) {
+            if (/^\s*$/.test(line)) {
                 return "";
-            } else {
-                return line;
             }
+
+            return line;
         });
 
         this.out = fastJoin(lines, "\n");
