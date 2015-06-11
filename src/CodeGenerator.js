@@ -2,42 +2,14 @@ import fs from "fs";
 import assert from "assert";
 import util from "util";
 import repeat from "lodash.repeat";
+import prettyTime from "pretty-hrtime";
 import each from "lodash.foreach";
 
 import InputStream from "./InputStream";
 import Iterator from "./iterator";
 import {isGreyspace, log} from "./utils";
 
-class Position {
-    constructor(string) {
-        this.string = string;
-        this.lastChar = 0;
-        this.position = {
-            line: 1,
-            col: 1
-        };
-    }
-
-    update(char) {
-        let incrementStr = this.string.slice(this.lastChar, char);
-        for (let i = 0; i < incrementStr.length; i++) {
-            let ch = incrementStr.charAt(i);
-            if (ch === "\n") {
-                this.position.col = 0;
-                this.position.line++;
-            } else {
-                this.position.col++;
-            }
-        }
-        this.lastChar = char;
-    }
-
-    getString() {
-        return `${this.position.line}:${this.position.col}`;
-    }
-}
-
-function fastJoin(array, joiner) {
+function fastJoin(array, joiner = "") {
     let string = "";
     each(array, function join(element, index) {
         if (typeof element === "object") element = JSON.stringify(element);
@@ -50,40 +22,122 @@ function fastJoin(array, joiner) {
 }
 
 export default class CodeGenerator {
-    constructor(ast, input, parsedInput) {
+    constructor(ast, input, parsedInput, insertedSemicolons) {
         this.ast = ast;
         this.input = input;
-        this.parsedInput = parsedInput;
-        this.position = new Position(input);
         this.iterator = new Iterator(parsedInput);
+
         this.out = "";
         this.indentation = 0;
         this.parents = [];
+        this.times = {};
+        this.stoppedTimes = {};
+
+        this.parsedInput = parsedInput;
+        this.insertedSemicolons = insertedSemicolons;
+        this.positions = this.getPositions();
+    }
+
+    task(task) {
+        if (this.times[task]) {
+            let diff = process.hrtime(this.times[task]);
+            this.stoppedTimes[task] = diff;
+            this.times[task] = null;
+        } else {
+            this.times[task] = process.hrtime();
+        }
     }
 
     log(...messages) {
+        let times = Object.keys(this.stoppedTimes).map(task => {
+            let time = this.stoppedTimes[task];
+            return `\n${task} took ${prettyTime(time)}`;
+        });
+
+        let posMessage = `At ${this.getPositionMessage()}: `;
+
         log(repeat(" ", this.parents.length * 4),
-            `At ${this.getPosition().getString()}: `,
-            fastJoin(fastJoin(messages, " ").split("\n"), "\\n")
-        );
+            posMessage,
+            fastJoin(fastJoin(messages, " ").split("\n"), "\\n"),
+            repeat(" ", posMessage.length),
+            ...times);
+
+        this.stoppedTimes = {};
+    }
+
+    getSemicolonsBeforePosition(position) {
+        return this.insertedSemicolons.filter(colonPosition => {
+            return colonPosition <= position;
+        }) || [];
+    }
+
+    getPositions() {
+        let positions = {};
+
+        let newString = fastJoin(this.parsedInput);
+        let origString = this.input;
+
+        let linesSeen = 1;
+        let charsSeen = 0;
+        let lastPos = 0;
+        for (let pos = 0; pos < origString.length; pos++) {
+            let semisBefore = this.getSemicolonsBeforePosition(pos).length;
+
+            let char = origString.charAt(pos);
+            if (char === "\n") {
+                linesSeen++;
+                charsSeen = 0;
+            } else {
+                charsSeen++;
+            }
+
+            let obj = {
+                line: linesSeen,
+                column: charsSeen
+            };
+
+            let newPos = pos + semisBefore;
+            if (newPos === pos) {
+                lastPos = newPos;
+                positions[newPos] = obj;
+            } else {
+                for (; lastPos < newPos; lastPos++) {
+                    positions[lastPos] = obj;
+                }
+            }
+        }
+
+        // Map to parsedInput for easy access later.
+        let before = "";
+        positions = this.parsedInput.map((element, index) => {
+            before += fastJoin(this.parsedInput.slice(index - 2, index - 1));
+            let pos = positions[before.length];
+
+            if (pos) {
+                return pos;
+            } else {
+                return positions[Object.keys(positions).length - 1];
+            }
+        });
+
+        return positions;
     }
 
     getPosition() {
-        let outputtedInput = fastJoin(this.parsedInput.slice(0, this.iterator.pos), "");
-        this.position.update(outputtedInput.length);
-        return this.position;
+        return this.positions[this.iterator.pos];
     }
 
     getPositionMessage() {
-        return ` at ${this.getPosition().getString()}.`;
+        let pos = this.getPosition();
+        return `${pos.line}:${pos.column}`;
     }
 
     croak(message) {
         if (message instanceof Error) {
-            message.msg += this.getPositionMessage();
+            message.msg += ` at ` + this.getPositionMessage();
             throw message;
         } else {
-            throw new Error(message + this.getPositionMessage());
+            throw new Error(message + ` at ` + this.getPositionMessage());
         }
     }
 
@@ -111,7 +165,9 @@ export default class CodeGenerator {
     }
 
     push(string) {
+        this.task("pushing string");
         this.out += string;
+        this.task("pushing string");
     }
 
     indent() {
@@ -214,11 +270,10 @@ export default class CodeGenerator {
     }
 
     ensureNewline() {
+        this.task("ensureNewline()");
         let current = this.iterator.current();
 
         this.assert(isGreyspace(current), `"${current}" is not greyspace`); // current has to be greyspace
-
-        this.log(`ensureNewline(): "${current}"`.replace(/\n/g, "\\n"));
 
         if (!/\n/.test(current)) { // contains newline
             current += "\n";
@@ -229,15 +284,20 @@ export default class CodeGenerator {
         let indentedCurrent = this.ensureIndentation(current);
         this.push(indentedCurrent);
         this.iterator.advanceUnlessAtEnd();
+        this.task("ensureNewline()");
+
+        this.log(`ensureNewline(): "${current}"`);
     }
 
     insertIndentation() {
         this.log("insertIndentation()");
+        this.task("insertIndentation()");
         this.out = this.out.replace(/\n[^\S\n]*$/, "\n" + this.getIndentationString());
+        this.task("insertIndentation()");
     }
 
     ensureIndentation(string) {
-        const indentation = repeat(" ", this.indentation * 4);
+        const indentation = this.getIndentationString();
 
         let lines = string.split("\n");
 
@@ -280,17 +340,18 @@ export default class CodeGenerator {
     }
 
     nodeContainsNewlines(node) {
+        let start = node.start;
+        let end = node.end;
         if (Array.isArray(node)) {
             if (node.length > 0) {
-                return this.input.slice(
-                    node[0].start, node[node.length - 1].end
-                    ).indexOf("\n") >= 0;
+                start = node[0].start;
+                end = node[node.length - 1].end;
             } else {
                 return false;
             }
         }
 
-        return this.input.slice(node.start, node.end).indexOf("\n") >= 0;
+        return this.input.slice(start, end).indexOf("\n") >= 0;
     }
 
     isFunction(node) {

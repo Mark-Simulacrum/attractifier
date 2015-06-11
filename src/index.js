@@ -41,6 +41,7 @@ try {
 
     writeString("original-tokens.json", JSON.stringify(tokens, null, 4));
 
+    let semicolonIndex = 0;
     function addToken(start, end) {
         let token = input.slice(start, end);
 
@@ -52,13 +53,14 @@ try {
 
         modifiedTokens.push(token);
 
-        if (semicolons.length && start < semicolons[0] && semicolons[0] <= end) {
-            let semiColonPos = semicolons.shift() - start;
+        let semicolon = semicolons[semicolonIndex];
+        if (semicolons.length && start < semicolon && semicolon <= end) {
+            let semiColonPos = semicolon - start;
             log("inserting semicolon @", semiColonPos + start);
             modifiedTokens.push("");
             modifiedTokens.push(";");
-        } else if (semicolons.length) {
-            log(`not inserting semicolon between ${start} and ${end}, semicolon is ${semicolons[0]}`)
+
+            semicolonIndex++;
         }
     }
 
@@ -95,7 +97,7 @@ try {
     }
 
     log("Init CodeGenerator");
-    let generator = new CodeGenerator(ast, input, modifiedTokens);
+    let generator = new CodeGenerator(ast, input, modifiedTokens, semicolons);
     log("Initialized CodeGenerator");
 
     let output = generator.generate();
