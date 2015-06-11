@@ -7,7 +7,7 @@ import each from "lodash.foreach";
 
 import InputStream from "./InputStream";
 import Iterator from "./iterator";
-import {isGreyspace, log} from "./utils";
+import {parseGreyspace, isGreyspace, log} from "./utils";
 
 function fastJoin(array, joiner = "") {
     let string = "";
@@ -163,6 +163,7 @@ export default class CodeGenerator {
     }
 
     push(string) {
+        this.log(`::push("${string}")`);
         this.task("pushing string");
         this.out += string;
         this.task("pushing string");
@@ -237,11 +238,12 @@ export default class CodeGenerator {
         if (/^[^\S\n]*$/.test(current)) {
             this.push(" ");
         } else if (isGreyspace(current)) {
-            this.push(
-                this.ensureIndentation(
-                    this._spaceWrap(current)
-                    )
-                );
+            if (!/\n/.test(current)) {
+                current = this._spaceWrap(current);
+            }
+
+            current = this.ensureIndentation(current);
+            this.push(current);
         } else {
             this.croak(`ensuring space with not a space: "${current}"`);
         }
@@ -294,25 +296,67 @@ export default class CodeGenerator {
         this.task("insertIndentation()");
     }
 
-    ensureIndentation(string) {
+    // format multiline block comments into nice-looking block comments
+    formatBlockComment(comment) {
         const indentation = this.getIndentationString();
 
-        let lines = string.split("\n");
-
+        let lines = comment.split("\n");
         lines = lines.map((line, index) => {
             if (index === 0) return line;
 
-            line = line.replace(/^\s*/, "");
-            line = indentation + line;
+            const isLast = index + 1 === lines.length;
+            let replacement = indentation + " *";
+            if (!isLast) replacement += " ";
+
+            // Replace all leading whitespace with indentation + single whitespace
+            line = line.replace(/^\s*\*?\s?/, replacement);
             return line;
         });
 
-        return lines.join("\n");
+        return fastJoin(lines, "\n");
+    }
+
+    ensureIndentation(string) {
+        // if (isGreyspace(string) && !/^\s*$/.test(string)) return string;
+
+        // parseGreyspace will throw if given a string that is not greyspace.
+        const indentation = this.getIndentationString();
+        let parsedNodes = parseGreyspace(string);
+
+        this.log(`ensureIndentation("${string}"): ${JSON.stringify(parsedNodes)}`);
+
+        let transformedString = "";
+        for (let node of parsedNodes) {
+            if (node.type === "blockComment") {
+                node.value = this.formatBlockComment(node.value);
+            } else {
+                let lines = node.value.split("\n");
+                lines = lines.map((line, index) => {
+                    if (index === 0) return line;
+
+                    line = line.replace(/^\s*/, indentation);
+                    return line;
+                });
+                this.log("lines: ", JSON.stringify(lines));
+
+                node.value = fastJoin(lines, "\n");
+            }
+
+            transformedString += node.value;
+        }
+
+        return transformedString;
     }
 
     ensureAtEnd() {
         this.assert(this.iterator.atEnd(), `asserting that iterator is at end.`);
         this.log("ensured at end");
+    }
+
+    printIndented(node) {
+        this.indent();
+        this.print(node);
+        this.dedent();
     }
 
     print(node) {
