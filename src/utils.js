@@ -26,5 +26,13 @@ export function isGreyspace(string) {
 
 export function log(...messages) {
     let data = messages.join(" ") + "\n";
-    fs.writeSync(3, data);
+    try {
+        fs.writeSync(3, data);
+    } catch (error) {
+        if (error.code === "EBADF") {
+            return;
+        } else {
+            throw error;
+        }
+    }
 }
