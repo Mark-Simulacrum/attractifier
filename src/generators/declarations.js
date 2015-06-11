@@ -38,7 +38,7 @@ export function FunctionDeclaration(node) {
         this.ensureVoid();
     }
 
-    this._params(node, this.nodeContainsNewlines(node.params));
+    this._params(node, false);
 
     this.ensureSpace();
     this.print(node.body);

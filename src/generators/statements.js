@@ -29,7 +29,7 @@ export function IfStatement(node) {
     this.ensureSpace();
     this.ensure("(");
     this.ensureVoid();
-    this.print(node.test);
+    this.printIndented(node.test);
     this.ensureVoid();
     this.ensure(")");
 
@@ -48,7 +48,7 @@ export function ReturnStatement(node) {
 
     if (node.argument) {
         this.ensureSpace();
-        this.print(node.argument);
+        this.printIndented(node.argument);
     }
 
     this.ensureVoid();

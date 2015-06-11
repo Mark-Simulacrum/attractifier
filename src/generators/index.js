@@ -126,7 +126,9 @@ export function _params(node, newlines) {
         this.print(node.typeParameters);
     }
 
+    this.indent();
     this._printContainedList("(", node.params, ")", { newlines });
+    this.dedent();
 
     if (node.returnType) {
         this.ensureVoid();
