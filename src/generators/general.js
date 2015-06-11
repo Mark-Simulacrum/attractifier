@@ -59,11 +59,11 @@ export function TemplateLiteral(node) {
                 this.ensureVoid();
             }
             this.ensure("${");
-            this.ensureSpace();
+            this.ensureVoid();
 
             this.print(node.expressions[i]);
 
-            this.ensureSpace();
+            this.ensureVoid();
             this.ensure("}");
             if (quasis[i + 1].value.raw !== "") {
                 this.ensureVoid();
