@@ -1,7 +1,8 @@
-import 'source-map-support/register';
+import "source-map-support/register";
 import assert from "assert";
 import fs from "fs";
 
+import "babel-core/polyfill";
 import {parse} from "babel-core";
 
 import {log, isGreyspace} from "./utils";
