@@ -47,6 +47,10 @@ export function ClassProperty(node) {
     this.ensure(";");
 }
 
+export function Super(node) {
+    this.ensure("super");
+}
+
 export function MethodDefinition(node) {
     if (node.static) {
         this.ensure("static");
