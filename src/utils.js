@@ -14,6 +14,9 @@ export function isGreyspace(string) {
 
     let stream = new InputStream(string);
 
+    // Consume shebang
+    stream.consume(/#!.*\n/);
+
     while (!stream.atEnd()) {
         let consumed = stream.consume(/\s+/) ||
             stream.consume(/\/\/[^\n]*/) ||
