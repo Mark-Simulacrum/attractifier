@@ -1,23 +1,40 @@
 import fs from "fs";
-import InputStream from "./InputStream";
+import repeat from "lodash.repeat";
+import memoize from "lodash.memoize";
 
-const whitespaceRe = /\s+/;
-const shebangRe = /#!.*\n/;
-const lineCommentRe = /\/\/[^\n]*/;
-const blockCommentRe = /\/\*[\W\S]*?\*\//;
-
-export function isGreyspace(string) {
-    if (string === "" ||
-        string === " " ||
-        string === "\n" ||
-        /^\s*$/.test(string)) {
-        return true;
+class TextStream {
+    constructor(input) {
+        this.input = input;
+        this.length = input.length;
+        this.char = 0;
+        this.consumed = null;
     }
 
-    if (string === undefined || string === null)
-        throw new Error("passed undefined or null to isGreyspace");
+    consume(regex) {
+        // Will return even when the regex is empty (empty string match)
+        let result = regex.exec(this.input.slice(this.char));
+        if (result && result.index === 0) {
+            this.consumed = result[0];
+            this.char += this.consumed.length;
 
-    let stream = new InputStream(string);
+            return true;
+        }
+
+        return false;
+    }
+
+    atEnd() {
+        return this.char >= this.length;
+    }
+}
+
+const whitespaceRe = /^\s+/;
+const shebangRe = /^#!.*\n/;
+const lineCommentRe = /^\/\/[^\n]*/;
+const blockCommentRe = /^\/\*[\W\S]*?\*\//;
+
+export const isGreyspace = memoize(function (string) {
+    let stream = new TextStream(string);
 
     // Consume shebang
     stream.consume(shebangRe);
@@ -30,15 +47,12 @@ export function isGreyspace(string) {
     }
 
     return stream.atEnd();
-}
+});
 
-export function parseGreyspace(string) {
-    if (string === undefined || string === null)
-        throw new Error("passed undefined or null to isGreyspace");
-
+export const parseGreyspace = memoize(function (string) {
     let parsedNodes = [];
 
-    let stream = new InputStream(string);
+    let stream = new TextStream(string);
 
     while (!stream.atEnd()) {
         if (stream.consume(whitespaceRe)) {
@@ -51,12 +65,16 @@ export function parseGreyspace(string) {
             parsedNodes.push({ type: "shebang", value: stream.consumed });
         } else {
             // Takes care of assertion that string is greyspace
-            throw new Error("string is not greyspace");
+            throw new Error(`string ("${string}") is not greyspace`.replace(/\n/g, "\\n"));
         }
     }
 
     return parsedNodes;
-}
+});
+
+export const getIndentString = memoize(function (indentLevel) {
+    return repeat(" ", indentLevel * 4);
+});
 
 export function log(...messages) {
     let data = messages.join(" ") + "\n";

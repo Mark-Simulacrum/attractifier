@@ -2,7 +2,10 @@
   "name": "pretty-generator",
   "dependencies": {
     "babel-core": "^5.5.5",
+    "lodash.filter": "^3.1.1",
     "lodash.foreach": "^3.0.3",
+    "lodash.map": "^3.1.4",
+    "lodash.memoize": "^3.0.4",
     "lodash.repeat": "^3.0.0",
     "pretty-hrtime": "^1.0.0",
     "source-map-support": "^0.3.1"
