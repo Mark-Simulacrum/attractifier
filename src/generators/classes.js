@@ -47,7 +47,7 @@ export function ClassProperty(node) {
     this.ensure(";");
 }
 
-export function Super(node) {
+export function Super() {
     this.ensure("super");
 }
 

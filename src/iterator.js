@@ -1,5 +1,3 @@
-import assert from "assert";
-
 export default class Iterator {
     constructor(array) {
         this.array = array;

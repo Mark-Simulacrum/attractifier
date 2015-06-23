@@ -1,18 +1,13 @@
-import fs from "fs";
-import assert from "assert";
-import util from "util";
-import repeat from "lodash.repeat";
-import prettyTime from "pretty-hrtime";
+import filter from "lodash.filter";
 import each from "lodash.foreach";
+import map from "lodash.map";
 
-import InputStream from "./InputStream";
 import Iterator from "./iterator";
 import {parseGreyspace, isGreyspace, log} from "./utils";
 
 function fastJoin(array, joiner = "") {
     let string = "";
-    each(array, function join(element, index) {
-        if (typeof element === "object") element = JSON.stringify(element);
+    each(array, function (element, index) {
         string += element;
         if (index + 1 !== array.length) {
             string += joiner;
@@ -64,7 +59,7 @@ export default class CodeGenerator {
     }
 
     getSemicolonsBeforePosition(position) {
-        return this.insertedSemicolons.filter(colonPosition => {
+        return filter(this.insertedSemicolons, colonPosition => {
             return colonPosition <= position;
         }) || [];
     }
@@ -72,15 +67,12 @@ export default class CodeGenerator {
     getPositions() {
         let positions = {};
 
-        let newString = fastJoin(this.parsedInput);
         let origString = this.input;
 
         let linesSeen = 1;
         let charsSeen = 0;
         let lastPos = 0;
         for (let pos = 0; pos < origString.length; pos++) {
-            let semisBefore = this.getSemicolonsBeforePosition(pos).length;
-
             let char = origString.charAt(pos);
             if (char === "\n") {
                 linesSeen++;
@@ -94,7 +86,9 @@ export default class CodeGenerator {
                 column: charsSeen
             };
 
+            let semisBefore = this.getSemicolonsBeforePosition(pos).length;
             let newPos = pos + semisBefore;
+
             if (newPos === pos) {
                 lastPos = newPos;
                 positions[newPos] = obj;
@@ -107,7 +101,7 @@ export default class CodeGenerator {
 
         // Map to parsedInput for easy access later.
         let before = "";
-        positions = this.parsedInput.map((element, index) => {
+        positions = map(this.parsedInput, (element, index) => {
             before += fastJoin(this.parsedInput.slice(index - 2, index - 1));
             let pos = positions[before.length];
 
@@ -141,7 +135,11 @@ export default class CodeGenerator {
 
     assert(condition, message) {
         if (!condition) {
-            this.croak("AssertionError: " + message);
+            if (message) {
+                this.croak("AssertionError: " + message.replace(/\n/g, "\\n"));
+            } else {
+                this.croak("AssertionError: message not given");
+            }
         }
     }
 
@@ -408,12 +406,20 @@ export default class CodeGenerator {
 }
 
 import * as generators from "./generators";
-for (let generatorName of Object.keys(generators)) {
-    CodeGenerator.prototype[`is${generatorName}`] = function (node) {
-        this.log(`is${generatorName}(): ${node && node.type === generatorName}`);
-        return node && node.type === generatorName;
-    };
+const keys = Object.keys(generators);
 
-    if (generatorName in CodeGenerator.prototype) throw new Error("base generator already in CodeGenerator");
-        CodeGenerator.prototype[generatorName] = generators[generatorName];
+function isFuncGenerator(type) {
+    return function (node) {
+        return node && node.type === type;
+    };
+}
+
+for (let i = keys.length - 1; i >= 0; i--) {
+    let generatorName = keys[i];
+
+    if (CodeGenerator.prototype[generatorName])
+        throw new Error(`${generatorName} already added to CodeGenerator.`);
+
+    CodeGenerator.prototype[`is${generatorName}`] = isFuncGenerator(generatorName);
+    CodeGenerator.prototype[generatorName] = generators[generatorName];
 }

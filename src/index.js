@@ -1,5 +1,4 @@
 import "source-map-support/register";
-import assert from "assert";
 import fs from "fs";
 
 import "babel-core/polyfill";
@@ -7,7 +6,6 @@ import {parse} from "babel-core";
 
 import {log, isGreyspace} from "./utils";
 import CodeGenerator from "./CodeGenerator";
-import InputStream from "./InputStream";
 
 const inputFile = process.argv[2];
 try {
@@ -35,7 +33,7 @@ try {
     function writeString(stringName, string) {
         if (WriteFile) {
             fs.writeFileSync(stringName, string);
-            log(`wrote ${stringName}.\n`)
+            log(`wrote ${stringName}.\n`);
         }
     }
 
@@ -69,7 +67,7 @@ try {
     const everyPercent = Math.round(tokens.length / 100) * 5;
     let percentNum = 0;
     for (let i = 0; i < tokens.length; i++) {
-        if (i % everyPercent === 0) log(`finished ${percentNum++}%`)
+        if (i % everyPercent === 0) log(`finished ${percentNum++}%`);
 
         let token = tokens[i];
         let { start, end } = token;

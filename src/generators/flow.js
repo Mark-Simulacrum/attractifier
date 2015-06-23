@@ -5,28 +5,27 @@ export function TypeAnnotation(node) {
     this.print(node.typeAnnotation);
 }
 
-export function AnyTypeAnnotation(node) {
+export function AnyTypeAnnotation() {
     this.ensure("any");
 }
 
-export function StringTypeAnnotation(node) {
+export function StringTypeAnnotation() {
     this.ensure("string");
 }
 
-export function NumberTypeAnnotation(node) {
+export function NumberTypeAnnotation() {
     this.ensure("number");
 }
 
-export function BooleanTypeAnnotation(node) {
+export function BooleanTypeAnnotation() {
     this.ensure("boolean");
 }
 
-export function TypeParameterInstantiation(node, print) {
+export function TypeParameterInstantiation(node) {
     this._printContainedList("<", node.params, ">");
 }
 
 export { TypeParameterInstantiation as TypeParameterDeclaration };
-
 
 export function InterfaceExtends(node) {
     this.print(node.id);
@@ -42,9 +41,7 @@ export {
 };
 
 export function TypeCastExpression(node) {
-    // this.ensure("("); // Handled by Parenthesized Expression
     this.print(node.expression);
     this.ensureVoid();
     this.print(node.typeAnnotation);
-    // this.ensure(")"); // Handled by Parenthesized Expression
 }
