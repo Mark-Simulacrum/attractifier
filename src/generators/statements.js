@@ -1,23 +1,33 @@
+export function Program(node) {
+    this.ensureVoid();
+
+    this._statements(node.body);
+
+    this.ensureAtEnd();
+}
+
 export function BlockStatement(node) {
     this.ensure("{");
 
     if (node.body.length === 0) {
-        this.ensureVoid();
+        let parent = this.enterPrint({ type: "__comment__" });
+
+        const pushedLines = this.ensureVoid();
+        if (pushedLines > 1) {
+            this.nestingLevels[this.nestingLevels.length - 2] = this.getNestingLevel();
+        }
+
+        this.exitPrint(parent);
     } else {
-        this.indent();
         this.ensureNewline();
 
         this._statements(node.body);
-
-        this.dedent();
-        this.insertIndentation();
     }
 
     this.ensure("}");
 }
 
 export function ExpressionStatement(node) {
-    this.insertIndentation();
     this.print(node.expression);
 
     this.ensureVoid();
@@ -27,19 +37,32 @@ export function ExpressionStatement(node) {
 export function IfStatement(node) {
     this.ensure("if");
     this.ensureSpace();
+
+    let parent = this.enterPrint({ type: "_if_params" });
+
     this.ensure("(");
     this.ensureVoid();
-    this.printIndented(node.test);
+
+    this.print(node.test);
+
     this.ensureVoid();
     this.ensure(")");
 
+    this.exitPrint(parent);
+
     this._printStatementBody(node.consequent);
 
+
     if (node.alternate) {
-        this.ensureSpace();
+        if (node.consequent.type === "BlockStatement") {
+            this.ensureSpace();
+        } else {
+            this.ensureNewline();
+        }
+
         this.ensure("else");
-        this.ensureSpace();
-        this.print(node.alternate);
+
+        this._printStatementBody(node.alternate);
     }
 }
 
@@ -48,14 +71,14 @@ export function ReturnStatement(node) {
 
     if (node.argument) {
         this.ensureSpace();
-        this.printIndented(node.argument);
+        this.print(node.argument);
     }
 
     this.ensureVoid();
     this.ensure(";");
 }
 
-export function EmptyStatement(node) {
+export function EmptyStatement() {
     this.ensure(";");
 }
 
@@ -92,8 +115,6 @@ export function BreakStatement(node) {
 }
 
 export function SwitchStatement(node) {
-    const ContainsNewlines = this.nodeContainsNewlines(node);
-
     this.ensure("switch");
     this.ensureSpace();
     this.ensure("(");
@@ -120,19 +141,15 @@ export function SwitchCase(node) {
     this.ensure(":");
 
     if (node.consequent.length) {
-        this.indent();
         this.ensureNewline();
 
-        for (let [index, consequentStatement] of node.consequent.entries()) {
-            this.insertIndentation();
-            this.print(consequentStatement);
+        for (let i = 0; i < node.consequent.length; i++) {
+            this.print(node.consequent[i]);
 
-            if (index + 1 !== node.consequent.length) {
+            if (i + 1 !== node.consequent.length) {
                 this.ensureNewline();
             }
         }
-
-        this.dedent();
     }
 }
 
@@ -156,7 +173,6 @@ export function TryStatement(node) {
     }
 
     if (node.handler) {
-        this.insertIndentation();
         this.print(node.handler);
 
         if (node.finalizer) {
@@ -165,7 +181,6 @@ export function TryStatement(node) {
     }
 
     if (node.finalizer) {
-        this.insertIndentation();
         this.ensure("finally");
         this.ensureSpace();
         this.print(node.finalizer);
@@ -280,7 +295,7 @@ export function ForInStatement(node) {
 
 export { ForInStatement as ForOfStatement };
 
-export function DebuggerStatement(node) {
+export function DebuggerStatement() {
     this.ensure("debugger");
     this.ensureVoid();
     this.ensure(";");

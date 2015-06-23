@@ -10,16 +10,29 @@ export * from "./declarations";
 export * from "./miscellaneous";
 
 export function _statements(statements) {
-    each(statements, statement => {
-        this.insertIndentation();
+    let parent = this.enterPrint({ type: "_statements" });
+
+    const startingLine = this.lines.length - 1;
+
+    each(statements, (statement, index) => {
         this.print(statement);
-        this.ensureNewline();
+
+        if (index + 1 !== statements.length) {
+            this.ensureNewline();
+        } else {
+            const pushedLines = this.ensureNewline();
+            if (pushedLines > 1) {
+                this.pairLine(-2, pushedLines - 1, startingLine);
+            }
+        }
     });
+
+    this.exitPrint(parent);
 }
 
 export function _printStatementBody(body) {
     const type = body.type;
-    if (type === "BlockStatement") {
+    if (type === "BlockStatement" || type === "IfStatement") {
         this.ensureSpace();
     } else if (type === "EmptyStatement") {
         this.ensureVoid();
@@ -27,20 +40,13 @@ export function _printStatementBody(body) {
         this.ensureNewline();
     }
 
-    const ShouldIndent = type !== "BlockStatement";
-
-    // typeof Body is Statement
-    if (ShouldIndent) this.indent();
-    this.insertIndentation();
     this.print(body);
-    if (ShouldIndent) this.dedent();
 }
 
 export function _printList(array, { separator = ",", newlines = false } = {}) {
     for (let i = 0; i < array.length; i++) {
         let element = array[i];
 
-        this.insertIndentation();
         this.print(element);
         this._printFlow(element);
 
@@ -65,7 +71,6 @@ export function _printContainedList(
     if (list.length) {
         if (newlines) {
             this.ensureNewline();
-            this.indent();
         } else if (wrapSpaces) {
             this.ensureSpace();
         } else {
@@ -76,7 +81,6 @@ export function _printContainedList(
         for (let i = 0; i < len; i++) {
             let element = list[i];
 
-            this.insertIndentation();
             this.print(element);
 
             if (element.optional) {
@@ -107,7 +111,6 @@ export function _printContainedList(
         }
 
         if (newlines) {
-            this.dedent();
             this.ensureNewline();
         } else if (wrapSpaces) {
             this.ensureSpace();
@@ -121,25 +124,39 @@ export function _printContainedList(
     this.ensure(close);
 }
 
-export function _params(node, newlines) {
+export function _params(node, { newlines, key = "params" } = {}) {
+    let parent = this.enterPrint({ type: "_params" });
+
     if (node.typeParameters) {
         this.print(node.typeParameters);
     }
 
-    this.indent();
-    this._printContainedList("(", node.params, ")", { newlines });
-    this.dedent();
+    this.ensure("(");
+
+    if (node[key].length) {
+        this.ensureVoid();
+
+        this._printList(node[key], { newlines });
+
+        this.ensureVoid();
+    } else {
+        this.ensureVoid();
+    }
+
+    this.ensure(")");
 
     if (node.returnType) {
         this.ensureVoid();
         this.print(node.returnType);
     }
+
+    this.exitPrint(parent);
 }
 
 export function _method(node) {
     let value = node.value;
-    let kind  = node.kind;
-    let key   = node.key;
+    let kind = node.kind;
+    let key = node.key;
 
     if (kind === "method" || kind === "init") {
         if (value.generator) {
@@ -185,20 +202,11 @@ export function _printFlow(node) {
     }
 }
 
-export function ParenthesizedExpression(node) {
-    this.ensure("(");
-    this.ensureVoid();
-
-    this.print(node.expression);
-
-    this.ensureVoid();
-    this.ensure(")");
-}
-
-export function Program(node) {
-    this.ensureVoid();
-
-    this._statements(node.body);
-
-    this.ensureAtEnd();
+export function _optionalSemicolon() {
+    if (this.isNext(";")) {
+        this.ensureVoid();
+        this.printFake(";");
+    } else if (this.isCurrent(";")) {
+        this.printFake(";");
+    }
 }

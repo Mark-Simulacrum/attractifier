@@ -7,7 +7,7 @@ export function ImportDeclaration(node) {
     this.ensureSpace();
 
     if (node.isType) {
-        this.ensure("type");
+        this.printFake("type");
         this.ensureSpace();
     }
 
@@ -18,24 +18,20 @@ export function ImportDeclaration(node) {
             let isLast = index + 1 === node.specifiers.length;
 
             if (this.isCurrent("{")) {
-
                 this.ensure("{");
 
                 if (hasNewlines) {
                     didIndent = true;
-                    this.indent();
                     this.ensureNewline();
                 } else {
                     this.ensureSpace();
                 }
             }
 
-            this.insertIndentation();
             this.print(specifier);
 
             if (isLast) {
                 if (didIndent) {
-                    this.dedent();
                     this.ensureNewline();
                 } else {
                     this.ensureSpace();
@@ -45,7 +41,6 @@ export function ImportDeclaration(node) {
                     this.ensure("}");
                     this.ensureSpace();
                 }
-
             } else {
                 this.ensureVoid();
                 this.ensure(",");
@@ -58,13 +53,14 @@ export function ImportDeclaration(node) {
             }
         }
 
-        this.ensure("from");
+        this.printFake("from");
         this.ensureSpace();
     }
 
     this.print(node.source);
+
     this.ensureVoid();
-    this.ensure(";");
+    this.printFake(";");
 }
 
 export function ImportSpecifier(node) {
@@ -90,9 +86,8 @@ export function ImportNamespaceSpecifier(node) {
     this.print(node.local);
 }
 
-export function ExportDefaultSpecifier(node) {
-    this.print(node.exported);
-}
+export { ImportDefaultSpecifier as ExportDefaultSpecifier };
+export { ImportNamespaceSpecifier as ExportNamespaceSpecifier };
 
 export function ExportSpecifier(node) {
     this.print(node.local);
@@ -102,14 +97,6 @@ export function ExportSpecifier(node) {
         this.ensureSpace();
         this.print(node.exported);
     }
-}
-
-export function ExportNamespaceSpecifier(node) {
-    this.ensure("*");
-    this.ensureSpace();
-    this.ensure("as");
-    this.ensureSpace();
-    this.print(node.exported);
 }
 
 export function ExportAllDeclaration(node) {
@@ -125,13 +112,13 @@ export function ExportAllDeclaration(node) {
     }
 
     this.ensureSpace();
-    this.ensure("from");
+    this.printFake("from");
     this.ensureSpace();
 
     this.print(node.source);
 
     this.ensureVoid();
-    this.ensure(";");
+    this.printFake(";");
 }
 
 export function ExportNamedDeclaration(node) {
@@ -140,79 +127,28 @@ export function ExportNamedDeclaration(node) {
 
     ExportDeclaration.call(this, node);
 
-    if (this.isNext(";")) {
-        this.ensureVoid();
-        this.ensure(";");
-    } else if (this.isCurrent(";")) {
-        this.ensure(";");
-    }
+    this._optionalSemicolon();
 }
 
 export function ExportDefaultDeclaration(node) {
     this.ensure("export");
     this.ensureSpace();
-    this.ensure("default");
+    this.printFake("default");
     this.ensureSpace();
+
     ExportDeclaration.call(this, node);
+
+    this._optionalSemicolon();
 }
 
 function ExportDeclaration(node) {
+    let parent = this.enterPrint({ type: "_export_declaration" });
+
     if (node.declaration) {
         this.print(node.declaration);
     } else {
-        const hasNewlines = this.nodeContainsNewlines(node);
-
-        if (node.specifiers.length) {
-            let didIndent = false;
-
-            for (let [index, specifier] of node.specifiers.entries()) {
-                let isLast = index + 1 === node.specifiers.length;
-
-                if (this.isCurrent("{")) {
-
-                    this.ensure("{");
-
-                    if (hasNewlines) {
-                        didIndent = true;
-                        this.indent();
-                        this.ensureNewline();
-                    } else {
-                        this.ensureSpace();
-                    }
-                }
-
-                this.print(specifier);
-
-                if (isLast) {
-                    if (didIndent) {
-                        this.dedent();
-                        this.ensureNewline();
-                    } else {
-                        this.ensureSpace();
-                    }
-
-                    if (this.isCurrent("}")) {
-                        this.ensure("}");
-                    }
-                } else {
-                    this.ensureVoid();
-                    this.ensure(",");
-
-                    if (didIndent) {
-                        this.ensureNewline();
-                    } else {
-                        this.ensureSpace();
-                    }
-                }
-            }
-
-        }
-
-        if (node.source) {
-            this.ensureSpace();
-            this.ensure("from");
-            this.ensureSpace();
-            this.print(node.source);
-        }
+        ImportDeclaration.call(this, node);
     }
+
+    this.exitPrint(parent);
 }

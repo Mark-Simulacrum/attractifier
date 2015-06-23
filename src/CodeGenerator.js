@@ -3,7 +3,7 @@ import each from "lodash.foreach";
 import map from "lodash.map";
 
 import Iterator from "./iterator";
-import {parseGreyspace, isGreyspace, log} from "./utils";
+import {parseGreyspace, isGreyspace, log, getIndentString} from "./utils";
 
 function fastJoin(array, joiner = "") {
     let string = "";
@@ -22,11 +22,18 @@ export default class CodeGenerator {
         this.input = input;
         this.iterator = new Iterator(parsedInput);
 
-        this.out = "";
-        this.indentation = 0;
         this.parents = [];
         this.times = {};
         this.stoppedTimes = {};
+        this.indentLevels = [];
+
+        this.openGroups = [];
+        this._openGroups = [];
+        this.linePairings = [];
+
+        this.nestingLevels = [];
+
+        this.lines = [];
 
         this.parsedInput = parsedInput;
         this.insertedSemicolons = insertedSemicolons;
@@ -43,19 +50,15 @@ export default class CodeGenerator {
         }
     }
 
-    log(...messages) {
-        let times = Object.keys(this.stoppedTimes).map(task => {
-            let time = this.stoppedTimes[task];
-            return `${task} took ${prettyTime(time)}`;
+    lineLog(...messages) {
+        messages = map(messages, message => {
+            if (typeof message === "string") {
+                return message.replace(/\n/g, "\\n");
+            } else {
+                return message;
+            }
         });
-
-        const indentation = repeat(" ", this.parents.length * 4);
-        log(indentation +
-            `At ${this.getPositionMessage()}:`,
-            fastJoin(fastJoin(messages, " ").split("\n"), "\\n") +
-            "\n" + indentation + fastJoin(times, "\n" + indentation));
-
-        this.stoppedTimes = {};
+        log(`${this.lines.length - 1}:`, ...messages);
     }
 
     getSemicolonsBeforePosition(position) {
@@ -143,42 +146,251 @@ export default class CodeGenerator {
         }
     }
 
-    generate() {
+    _generate() {
+        this._pushLineHead("", null);
+
+        this.currentNode = this.ast;
         this.print(this.ast);
 
-        let lines = this.out.split("\n");
-        lines = lines.map(line => {
+        if (this.nestingLevels.length &&
+            this.nestingLevels[this.nestingLevels.length - 1] === null) {
+            this.nestingLevels[this.nestingLevels.length - 1] = 0;
+        }
+
+        // Don't iterate the 0 index; because no i - 1 element
+        for (let i = this.nestingLevels.length - 1; i > 0; i--) {
+            // If previous nesting level is null, set its' nesting level
+            // to our nesting level
+            if (this.nestingLevels[i - 1] === null) {
+                this.nestingLevels[i - 1] = this.nestingLevels[i];
+            }
+        }
+
+        let lines = map(this.lines, (line, index) => {
+            const nestingLevel = this.nestingLevels[index];
+            const indentLevel = this.getIndentLevel(index);
+
+            this.assert(nestingLevel !== null, "nestingLevel is not null");
+            this.assert(nestingLevel !== undefined, "nestingLevel is defined");
+
+            this.assert(indentLevel !== null, "indentLevel is not null");
+            this.assert(indentLevel !== undefined, "indentLevel is defined");
+
+            let leader = "";
+            // let table = [index, nestingLevel, indentLevel,
+            //     this.linePairings[index]];
+
+            // table = map(table, (item, index) => {
+            //     if (item === null) item = "null";
+            //     if (item === undefined) item = "undefined";
+
+            //     const itemLength = item.toString().length;
+
+            //     item += repeat(" ", 3 - itemLength);
+            //     if (index === 0) item += ":";
+
+            //     return item;
+            // });
+
+            // leader += fastJoin(table, " ")
+            // leader += repeat(" ", 20 - leader.length) + "|";
+
+            // leader = "";
+
             if (/^\s*$/.test(line)) {
-                return "";
+                return leader;
             }
 
+            return leader + getIndentString(indentLevel) + line;
+        });
+
+        return fastJoin(lines, "\n");
+    }
+
+    generate() {
+        try {
+            return this._generate();
+        } catch (error) {
+            this.croak(error);
+        }
+    }
+
+    pushBlackspace(text) {
+        this.assert(!isGreyspace(text), `${text} should not be greyspace`);
+
+        this._pushLineTail(text, this.getNestingLevel());
+    }
+
+    pushGreyspace(text) {
+        this.assert(isGreyspace(text), `${text} should be greyspace`);
+        text = this._formatGreyspace(text);
+        let lines = text.split("\n");
+
+        this._pushLineTail(lines.shift(), null);
+
+        each(lines, line => {
+            this._pushLineHead(line);
+        });
+
+        return lines.length;
+    }
+
+    _pushLineHead(text) {
+        this.assert(text !== undefined && text !== "undefined", "text does not equal undefined");
+
+        this.lines.push(text);
+
+        this.linePairings.push(null);
+        this.nestingLevels.push(null);
+    }
+
+    _pushLineTail(text, nestingLevel) {
+        this.assert(text !== undefined, "text does not equal undefined");
+        this.assert(this.lines.length > 0, "At least one line");
+        this.assert(this.lines[this.lines.length - 1] !== undefined, "Last line isn't undefined");
+
+        this.lines[this.lines.length - 1] += text;
+
+        if (nestingLevel === null) return;
+
+        if (this.nestingLevels[this.nestingLevels.length - 1] === null) {
+            this.lineLog("setting nestingLevel to", nestingLevel);
+            this.nestingLevels[this.nestingLevels.length - 1] = nestingLevel;
+        }
+    }
+
+    _formatGreyspace(greyspace) {
+        // parseGreyspace will throw if given a string that is not greyspace.
+        const parsedGreyspaces = parseGreyspace(greyspace);
+
+        this.lineLog(`_formatGreyspace("${greyspace}"): ${JSON.stringify(parsedGreyspaces)}`);
+
+        let lineHandler = (line, index) => {
+            if (index === 0) return line;
+
+            return line.trim();
+        };
+
+        let transformedString = "";
+        for (let greyspace of parsedGreyspaces) {
+            if (greyspace.type === "blockComment") {
+                greyspace.value = this._formatBlockComment(greyspace.value);
+            } else {
+                let lines = greyspace.value.split("\n");
+                lines = map(lines, lineHandler);
+                greyspace.value = fastJoin(lines, "\n");
+            }
+
+            transformedString += greyspace.value;
+        }
+
+        return transformedString;
+    }
+
+    // format multiline block comments into nice-looking block comments
+    _formatBlockComment(comment) {
+        let lines = comment.split("\n");
+        lines = map(lines, (line, index) => {
+            if (index === 0) return line;
+
+            const isLast = index + 1 === lines.length;
+            let replacement = " *";
+            if (!isLast) replacement += " ";
+
+            // Replace all leading whitespace with indentation + single whitespace
+            line = line.replace(/^\s*\*?\s?/, replacement);
             return line;
         });
 
-        this.out = fastJoin(lines, "\n");
-
-        return this.out;
+        return fastJoin(lines, "\n");
     }
 
-    push(string) {
-        this.log(`::push("${string}")`);
-        this.task("pushing string");
-        this.out += string;
-        this.task("pushing string");
+    myType(type) {
+        if (type === null) return "null";
+
+        const typeObj = { type };
+
+        if (this.isExpression(typeObj) ||
+            this.isPattern(typeObj) || this.isSingleItem(typeObj)) return "_expression_";
+        if (this.isExpressionLike(typeObj))
+            return `_expression_like_${type}`;
+        return type;
     }
 
-    indent() {
-        this.indentation++;
-        this.log("indented:", this.indentation);
+    /**
+     * Count all elements in this.parents;
+     * except for those consecutively followed by the same type.
+     */
+    getNestingLevel() {
+        let parentCount = 0;
+        let parents = this.parents.concat(this.currentNode);
+
+        // Start at index 1 to prevent out-of-bounds array access for prevParent
+        // And skip first 3 nodes (Program and _statements, and next top-level)
+        // node
+        // parents =
+        //  0: Program,
+        //  1: _statements,
+        //  2: effectively ignored by not having any real parents
+        //  3+: nodes we need to count
+        for (let i = 3; i < parents.length; i++) {
+            let prevParent = parents[i - 1];
+            let currentParent = parents[i];
+
+            // ignore function body that AST disguises as BlockStatement
+            if (this.isFunction(currentParent)) continue;
+            if (this.isIdentifier(currentParent)) continue;
+            if (this.isBlockStatement(currentParent) && this.isFunction(prevParent)) continue;
+            if (this.is_statements(prevParent)) continue;
+
+            if (this.myType(currentParent.type) !== this.myType(prevParent.type)) {
+                parentCount++;
+            }
+        }
+
+        this.lineLog("nestingLevel:", parentCount,
+            "currentNode:", this.currentNode.type + "\n\t" +
+            JSON.stringify(this.parents.slice(3).map(parent => parent.type)));
+
+        return parentCount;
     }
 
-    dedent() {
-        this.indentation--;
-        this.log("dedented:", this.indentation);
-    }
+    getIndentLevel(index) {
+        const nestingLevel = this.nestingLevels[index];
+        const linePairing = this.linePairings[index];
 
-    getIndentationString() {
-        return repeat(" ", this.indentation * 4);
+        this.assert(nestingLevel !== null, `nestingLevel is not null`);
+
+        let indentLevel = 0;
+
+        if (linePairing !== null && linePairing !== index) {
+            indentLevel = this.indentLevels[linePairing];
+            this.lineLog(`setting indentLevel to ${indentLevel} for ${index} from indent level @ ${linePairing}`);
+        } else {
+            for (let i = index - 1; i >= 0; i--) {
+                const previousIndentLevel = this.indentLevels[i];
+                const previousNestingLevel = this.nestingLevels[i];
+
+                // this.lineLog(`running: iteration #${index - 1 - i};\n\tpassed index=${index}; nestingLevel=${nestingLevel}; previousNestingLevel=${previousNestingLevel}`);
+                this.assert(previousNestingLevel !== null, `previousNestingLevel is not null at ${i} with ${index}`);
+                this.assert(previousIndentLevel !== undefined, `indentLevels is defined at ${i} with ${index}`);
+
+                if (nestingLevel < previousNestingLevel) continue;
+
+                if (nestingLevel === previousNestingLevel) {
+                    indentLevel = previousIndentLevel;
+                } else {
+                    indentLevel = previousIndentLevel + 1;
+                }
+                break;
+            }
+
+            this.lineLog(`ran through possible indent levels for ${index}`);
+        }
+
+        this.indentLevels.push(indentLevel);
+
+        return indentLevel;
     }
 
     _spaceWrap(string, { leading = true, trailing = true } = {}) {
@@ -201,21 +413,7 @@ export default class CodeGenerator {
         return string;
     }
 
-    ensure(string) {
-        let currentValue = this.iterator.current();
-
-        this.log(`ensure("${string}"): "${currentValue}"`);
-
-        this.assert(currentValue === string, "current value is equal to string");
-        this.assert(!isGreyspace(currentValue), "should be false: isGreyspace(currentValue)");
-
-        this.push(currentValue);
-        this.iterator.advanceUnlessAtEnd();
-    }
-
     isCurrent(string) {
-        this.log(`isCurrent("${string}"): ${string === this.iterator.current()}`);
-
         return string === this.iterator.current();
     }
 
@@ -223,25 +421,104 @@ export default class CodeGenerator {
         let peekingIterator = this.iterator.peek();
         peekingIterator.advanceUnlessAtEnd();
 
-        this.log(`isNext("${string}"): ${string === peekingIterator.current()}`);
-
         return string === peekingIterator.current();
+    }
+
+    pairLine(offset, count, toLine) {
+        for (let i = 0; i < count; i++) {
+            const index = this.linePairings.length + offset - i;
+
+            // assert that the pairing is null or that the values are equivalent
+            this.assert(this.linePairings[index] === null ||
+                toLine === this.linePairings[index],
+                `${index} is already paired to ${this.linePairings[index]}, ` +
+                    `attempting pairing to: ${toLine}`);
+            this.linePairings[index] = toLine;
+        }
+    }
+
+    ensure(string) {
+        let currentValue = this.iterator.current();
+
+        this.lineLog("ensuring:", currentValue, "from", this.currentNode.type);
+
+        this.assert(currentValue === string,
+            `current value (${currentValue}) is not equal to string (${string})`);
+
+        if (currentValue === "}" || currentValue === ">" ||
+            currentValue === "]" ||
+            (currentValue === ")" &&
+                (this.isFunction(this.currentNode) ||
+                    this.isCallExpression(this.parents[this.parents.length - 2])))) {
+
+            let levelsUp = 0;
+
+            // if the parent of the current node is _statements, then we
+            // want to use ourselves.
+            if (this._openGroups[this._openGroups.length - 2] === "_statements" ||
+                this.currentNode.type === "_member_expression_accessor" ||
+                this.currentNode.type === "ArrayExpression") {
+                levelsUp = 1;
+            } else {
+                levelsUp = 2;
+            }
+
+            this.assert(this.openGroups.length >= levelsUp);
+            const pairing = this.openGroups[this.openGroups.length - levelsUp];
+
+            this.lineLog("pairing:", pairing, "to", this.lines.length - 1, JSON.stringify(this._openGroups));
+
+            // Only set the line pairing for the current line if we are the
+            // first blackspace being pushed onto the line
+            if (this.nestingLevels[this.nestingLevels.length - 1] === null) {
+                this.pairLine(-1, 1, pairing);
+            }
+        }
+
+        this.pushBlackspace(currentValue);
+        this.iterator.advanceUnlessAtEnd();
+    }
+
+    startGroup() {
+        const nestingLevel = this.getNestingLevel();
+        this.lineLog("Starting group:", this.currentNode.type,
+            "with nestingLevel:", nestingLevel, "on line:", this.lines.length - 1);
+        this._pushLineTail("", nestingLevel);
+
+        this.openGroups.push(this.lines.length - 1);
+        this._openGroups.push(this.currentNode.type);
+    }
+
+    stopGroup() {
+        const line = this.openGroups.pop();
+        const type = this._openGroups.pop();
+
+        this.lineLog("Stopping group:", this.currentNode.type,
+            type, "from line:", line);
+
+        // We are synchronized with currentNode
+        this.assert(type === this.currentNode.type);
     }
 
     ensureSpace() {
         let current = this.iterator.current();
-        this.log(`ensureSpace(): "${current}"`);
+
+        this.lineLog(`ensureSpace("${current}")`);
 
         // current is whitespace (not including newlines)
-        if (/^[^\S\n]*$/.test(current)) {
-            this.push(" ");
+        const allowNewlines = this.isExpressionLike(this.currentNode) ||
+            this.isFunction(this.currentNode);
+
+        if (
+            (allowNewlines && /^[^\S\n]*$/.test(current)) ||
+            (!allowNewlines && /^\s*$/.test(current))) {
+            this.pushGreyspace(" ");
         } else if (isGreyspace(current)) {
             if (!/\n/.test(current)) {
                 current = this._spaceWrap(current);
             }
 
-            current = this.ensureIndentation(current);
-            this.push(current);
+            this.pushGreyspace(current);
         } else {
             this.croak(`ensuring space with not a space: "${current}"`);
         }
@@ -251,27 +528,23 @@ export default class CodeGenerator {
 
     ensureVoid() {
         let current = this.iterator.current();
+        this.iterator.advanceUnlessAtEnd();
+        this.lineLog(`ensureVoid(): "${current}"`);
 
         // current is whitespace (not including newlines)
-        if (/^\s*$/.test(current)) {
-            this.log(`ensureVoid(""): "${current}"`);
-            this.push("");
+        if (/^[^\S\n]*$/.test(current)) {
+            return this.pushGreyspace("");
         } else if (isGreyspace(current)) {
-            this.log(`ensureVoid(Greyspace): "${current}"`);
-            this.push(this.ensureIndentation(current));
+            return this.pushGreyspace(current);
         } else {
-            this.log(`ensureVoid(): "${current}"`);
             this.croak("unhandled case in ensureVoid");
         }
 
-        this.iterator.advanceUnlessAtEnd();
     }
 
     ensureNewline() {
-        this.task("ensureNewline()");
         let current = this.iterator.current();
-
-        this.assert(isGreyspace(current), `"${current}" is not greyspace`); // current has to be greyspace
+        this.iterator.advanceUnlessAtEnd();
 
         if (!/\n/.test(current)) { // contains newline
             current += "\n";
@@ -279,109 +552,75 @@ export default class CodeGenerator {
 
         current = current.replace(/^[^\S\n]\n/, "\n");
 
-        let indentedCurrent = this.ensureIndentation(current);
-        this.push(indentedCurrent);
-        this.iterator.advanceUnlessAtEnd();
-        this.task("ensureNewline()");
-
-        this.log(`ensureNewline(): "${current}"`);
-    }
-
-    insertIndentation() {
-        this.log("insertIndentation()");
-        this.task("insertIndentation()");
-        this.out = this.out.replace(/\n[^\S\n]*$/, "\n" + this.getIndentationString());
-        this.task("insertIndentation()");
-    }
-
-    // format multiline block comments into nice-looking block comments
-    formatBlockComment(comment) {
-        const indentation = this.getIndentationString();
-
-        let lines = comment.split("\n");
-        lines = lines.map((line, index) => {
-            if (index === 0) return line;
-
-            const isLast = index + 1 === lines.length;
-            let replacement = indentation + " *";
-            if (!isLast) replacement += " ";
-
-            // Replace all leading whitespace with indentation + single whitespace
-            line = line.replace(/^\s*\*?\s?/, replacement);
-            return line;
-        });
-
-        return fastJoin(lines, "\n");
-    }
-
-    ensureIndentation(string) {
-        // if (isGreyspace(string) && !/^\s*$/.test(string)) return string;
-
-        // parseGreyspace will throw if given a string that is not greyspace.
-        const indentation = this.getIndentationString();
-        let parsedNodes = parseGreyspace(string);
-
-        this.log(`ensureIndentation("${string}"): ${JSON.stringify(parsedNodes)}`);
-
-        let transformedString = "";
-        for (let node of parsedNodes) {
-            if (node.type === "blockComment") {
-                node.value = this.formatBlockComment(node.value);
-            } else {
-                let lines = node.value.split("\n");
-                lines = lines.map((line, index) => {
-                    if (index === 0) return line;
-
-                    line = line.replace(/^\s*/, indentation);
-                    return line;
-                });
-                this.log("lines: ", JSON.stringify(lines));
-
-                node.value = fastJoin(lines, "\n");
-            }
-
-            transformedString += node.value;
-        }
-
-        return transformedString;
+        this.lineLog(`ensureNewline(): "${current}"`);
+        return this.pushGreyspace(current);
     }
 
     ensureAtEnd() {
         this.assert(this.iterator.atEnd(), `asserting that iterator is at end.`);
-        this.log("ensured at end");
-    }
-
-    printIndented(node) {
-        this.indent();
-        this.print(node);
-        this.dedent();
+        this.lineLog("ensured at end");
     }
 
     print(node) {
-        this.parents.push(this.currentNode);
+        try {
+            let parent = this.enterPrint(node);
 
-        if (this[node.type]) {
-            let parent = this.currentNode;
-            this.currentNode = node;
+            this[node.type](node, parent);
 
-            this.log(`:::print(${node.type})`);
-            try {
-                this[node.type](node, parent);
-            } catch (error) {
-                this.croak(error);
-            }
-
-            this.currentNode = parent;
-        } else {
-            this.croak("cannot handle printing type: " + node.type);
+            this.exitPrint(parent);
+        } catch (error) {
+            this.croak(error);
         }
-
-        this.parents.pop(this.currentNode);
     }
 
-    nodeContainsNewlines(node) {
+    /**
+     * Simple wrapper for word-printing with possible indentation.
+     */
+    printFake(word) {
+        let previous = this.enterPrint({ type: `__${word}__` });
+        this.ensure(word);
+        this.exitPrint(previous);
+    }
+
+    printNodeAs(node, parent, type) {
+        // generator(node, parent)
+        this[type](node, parent);
+    }
+
+    enterPrint(node) {
+        this.assert(this.currentNode);
+
+        this.lineLog("setting current node to:", node.type);
+
+        let parent = this.currentNode;
+        this.currentNode = node;
+        this.parents.push(this.currentNode);
+
+        this.lineLog(`:::print(${node.type})`);
+        this.startGroup();
+
+        return parent;
+    }
+
+    exitPrint(parent) {
+        this.stopGroup();
+
+        this.parents.pop();
+        this.currentNode = parent;
+        this.lineLog("restoring current node to:", this.currentNode.type);
+    }
+
+    /**
+     * Returns the start and end positions of a given AST node.
+     *
+     * If the node is an array, returns the start property
+     * of the first node in the array, and the end property
+     * of the last node in the array.
+     */
+    _getRange(node) {
         let start = node.start;
         let end = node.end;
+
         if (Array.isArray(node)) {
             if (node.length > 0) {
                 start = node[0].start;
@@ -391,11 +630,40 @@ export default class CodeGenerator {
             }
         }
 
+        return { start, end };
+    }
+
+    nodeContainsNewlines(node) {
+        let { start, end } = this._getRange(node);
         return this.input.slice(start, end).indexOf("\n") >= 0;
     }
 
     isFunction(node) {
-        return this.isFunctionExpression(node) || this.isFunctionDeclaration(node);
+        return this.isFunctionExpression(node) || this.isFunctionDeclaration(node) ||
+            this.isMethodDefinition(node) || this.isArrowFunctionExpression(node);
+    }
+
+    isExpression(node) {
+        return node.type.endsWith("Expression");
+    }
+
+    isPattern(node) {
+        return node.type.endsWith("Pattern");
+    }
+
+    isSingleItem(node) {
+        return this.isLiteral(node) ||
+            this.isTemplateLiteral(node) || this.isIdentifier(node);
+    }
+
+    isExpressionLike(node) {
+        return this.isExpression(node) || this.isPattern(node) ||
+                    this.is_params(node) || this.isIdentifier(node) ||
+                    this.isLiteral(node);
+    }
+
+    isStatement(node) {
+        return node.type.endsWith("Statement");
     }
 
     isFor(node) {

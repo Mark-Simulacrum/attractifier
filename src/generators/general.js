@@ -1,7 +1,7 @@
 import {isGreyspace} from "../utils";
-import assert from "assert";
 
 export function Identifier(node) {
+    this.lineLog("Identifier:", node.name);
     this.ensure(node.name);
 }
 
@@ -44,8 +44,6 @@ export function TemplateLiteral(node) {
     let quasis = node.quasis;
     let len = quasis.length;
 
-    this.log("quasis:", quasis);
-
     if (this.isCurrent("") && quasis[0] && quasis[0].value.raw !== "") {
         this.ensureVoid();
     }
@@ -53,8 +51,6 @@ export function TemplateLiteral(node) {
         this.print(quasis[i]);
 
         if (node.expressions[i]) {
-            this.log("printing expression");
-
             if (!this.isCurrent("${")) {
                 this.ensureVoid();
             }

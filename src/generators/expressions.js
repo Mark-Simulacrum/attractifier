@@ -1,19 +1,34 @@
+export function ParenthesizedExpression(node) {
+    this.ensure("(");
+    this.ensureVoid();
+
+    this.print(node.expression);
+
+    this.ensureVoid();
+    this.ensure(")");
+}
+
 export function CallExpression(node) {
     this.print(node.callee);
 
     this.ensureVoid();
 
-    this._printContainedList("(", node.arguments, ")", { newlines: false });
+    this._params(node, { key: "arguments" });
 }
 
 export function MemberExpression(node) {
     this.print(node.object);
     this.ensureVoid();
 
+    let prev = this.enterPrint({ type: "_member_expression_accessor" });
     if (node.computed) {
         this.ensure("[");
         this.ensureVoid();
+
+        let prev = this.enterPrint({ type: "_member_expression_property" });
         this.print(node.property);
+        this.exitPrint(prev);
+
         this.ensureVoid();
         this.ensure("]");
     } else {
@@ -21,11 +36,10 @@ export function MemberExpression(node) {
         this.ensureVoid();
         this.print(node.property);
     }
+    this.exitPrint(prev);
 }
 
 export function ArrayExpression(node) {
-    const ContainsNewlines = this.nodeContainsNewlines(node);
-
     this._printContainedList("[", node.elements, "]", { newlines: false, wrapSpaces: true });
 }
 
@@ -108,7 +122,7 @@ export function SequenceExpression(node) {
     this._printList(node.expressions, this.nodeContainsNewlines(node));
 }
 
-export function ThisExpression(node) {
+export function ThisExpression() {
     this.ensure("this");
 }
 
@@ -156,7 +170,7 @@ export function NewExpression(node) {
     }
 }
 
-export function UnaryExpression(node, parent) {
+export function UnaryExpression(node) {
     let HasSpace;
 
     if (this.isUpdateExpression(node.argument)) {
