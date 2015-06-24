@@ -150,6 +150,7 @@ export default class CodeGenerator {
     }
 
     _generate() {
+        timeLogStart();
         this._pushLineHead("", null);
 
         this.currentNode = this.ast;
