@@ -1,24 +1,25 @@
 import "source-map-support/register";
 import fs from "fs";
 
-import "babel-core/polyfill";
 import {parse} from "babel-core";
 
-import {log, isGreyspace} from "./utils";
+import {log, isGreyspace, timeLog} from "./utils";
 import CodeGenerator from "./CodeGenerator";
 
 const inputFile = process.argv[2];
+
 try {
     if (!inputFile) {
         process.stderr.write("Usage: node ./lib/index.js FILE\n");
         process.exit(1);
     }
 
-    log("started reading from inputFile");
     let input = fs.readFileSync(inputFile).toString();
     let tokens = [];
     let semicolons = [];
-    log("started parsing input");
+
+    timeLog("read input file");
+
     let ast = parse(input, {
         onToken: tokens,
         onInsertedSemicolon(semicolon) {
@@ -27,7 +28,7 @@ try {
         preserveParens: true
     });
 
-    log("finished parsing input (length: " + input.length + ")");
+    timeLog("parsed input; length: " + input.length);
 
     const WriteFile = "DEBUG" in process.env;
     function writeString(stringName, string) {
@@ -37,13 +38,14 @@ try {
         }
     }
 
-    writeString("original-tokens.json", JSON.stringify(tokens, null, 4));
+    if (WriteFile) {
+        writeString("original-tokens.json", JSON.stringify(tokens, null, 4));
+    }
 
     let semicolonIndex = 0;
     function addToken(start, end) {
-        let token = input.slice(start, end);
-
-        let lastToken = modifiedTokens[modifiedTokens.length - 1];
+        const token = input.slice(start, end);
+        const lastToken = modifiedTokens[modifiedTokens.length - 1];
 
         if ((lastToken === undefined || !isGreyspace(lastToken)) && !isGreyspace(token)) {
             modifiedTokens.push("");
@@ -51,10 +53,9 @@ try {
 
         modifiedTokens.push(token);
 
-        let semicolon = semicolons[semicolonIndex];
+        const semicolon = semicolons[semicolonIndex];
         if (semicolons.length && start < semicolon && semicolon <= end) {
-            let semiColonPos = semicolon - start;
-            log("inserting semicolon @", semiColonPos + start);
+            const semiColonPos = semicolon - start;
             modifiedTokens.push("");
             modifiedTokens.push(";");
 
@@ -64,11 +65,7 @@ try {
 
     let lastTokenEnd = 0;
     let modifiedTokens = [];
-    const everyPercent = Math.round(tokens.length / 100) * 5;
-    let percentNum = 0;
     for (let i = 0; i < tokens.length; i++) {
-        if (i % everyPercent === 0) log(`finished ${percentNum++}%`);
-
         let token = tokens[i];
         let { start, end } = token;
 
@@ -83,22 +80,24 @@ try {
         lastTokenEnd = end;
     }
 
-    if (modifiedTokens[modifiedTokens.length - 1] && !isGreyspace(modifiedTokens[modifiedTokens.length - 1])) {
+    if (modifiedTokens.length > 0 && !isGreyspace(modifiedTokens[modifiedTokens.length - 1])) {
         modifiedTokens.push("");
     }
 
-    // prevent stringification from running if we don't do anything anyway
+    // prevent stringification and inspection from running if we don't do anything anyway
     if (WriteFile) {
         writeString("transformed-tokens.json", JSON.stringify(modifiedTokens, null, 4));
         writeString("joined-tokens.json", modifiedTokens.join(""));
         writeString("ast.js", require("util").inspect(ast, { depth: 50 }));
     }
 
-    log("Init CodeGenerator");
-    let generator = new CodeGenerator(ast, input, modifiedTokens, semicolons);
-    log("Initialized CodeGenerator");
+    timeLog("Created tokens");
 
+    let generator = new CodeGenerator(ast, input, modifiedTokens, semicolons);
+
+    timeLog("new CodeGenerator()");
     let output = generator.generate();
+    timeLog("CodeGenerator.generate()");
     process.stdout.write(output);
 } catch (error) {
     error.message = `In file "${inputFile}": ${error.message}`;

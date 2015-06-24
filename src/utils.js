@@ -1,6 +1,7 @@
 import fs from "fs";
 import repeat from "lodash.repeat";
 import memoize from "lodash.memoize";
+import prettyTime from "pretty-hrtime";
 
 class TextStream {
     constructor(input) {
@@ -76,15 +77,28 @@ export const getIndentString = memoize(function (indentLevel) {
     return repeat(" ", indentLevel * 4);
 });
 
+export let shouldWrite = true;
 export function log(...messages) {
+    if (!shouldWrite) return;
     let data = messages.join(" ") + "\n";
     try {
         fs.writeSync(3, data);
     } catch (error) {
+        shouldWrite = false;
+
         if (error.code === "EBADF") {
             return;
         } else {
             throw error;
         }
     }
+}
+
+// let lastTime = process.hrtime();
+export function timeLog(event) {
+    // let diff = process.hrtime(lastTime);
+    // if (lastTime !== null) {
+        // console.log(prettyTime(diff) + ":", event);
+    // }
+    // lastTime = process.hrtime();
 }

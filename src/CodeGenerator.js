@@ -1,9 +1,10 @@
 import filter from "lodash.filter";
 import each from "lodash.foreach";
 import map from "lodash.map";
+import endsWith from "lodash.endswith";
 
 import Iterator from "./iterator";
-import {parseGreyspace, isGreyspace, log, getIndentString} from "./utils";
+import {parseGreyspace, isGreyspace, log, timeLog, getIndentString, shouldWrite as WillWrite} from "./utils";
 
 function fastJoin(array, joiner = "") {
     let string = "";
@@ -23,8 +24,6 @@ export default class CodeGenerator {
         this.iterator = new Iterator(parsedInput);
 
         this.parents = [];
-        this.times = {};
-        this.stoppedTimes = {};
         this.indentLevels = [];
 
         this.openGroups = [];
@@ -37,28 +36,20 @@ export default class CodeGenerator {
 
         this.parsedInput = parsedInput;
         this.insertedSemicolons = insertedSemicolons;
-        this.positions = this.getPositions();
-    }
-
-    task(task) {
-        if (this.times[task]) {
-            let diff = process.hrtime(this.times[task]);
-            this.stoppedTimes[task] = diff;
-            this.times[task] = null;
-        } else {
-            this.times[task] = process.hrtime();
-        }
+        this.positions = null;
     }
 
     lineLog(...messages) {
-        messages = map(messages, message => {
-            if (typeof message === "string") {
-                return message.replace(/\n/g, "\\n");
-            } else {
-                return message;
-            }
-        });
-        log(`${this.lines.length - 1}:`, ...messages);
+        if (WillWrite) {
+            messages = map(messages, message => {
+                if (typeof message === "string") {
+                    return message.replace(/\n/g, "\\n");
+                } else {
+                    return message;
+                }
+            })
+            log(`${this.lines.length - 1}:`, ...messages);
+        }
     }
 
     getSemicolonsBeforePosition(position) {
@@ -128,6 +119,8 @@ export default class CodeGenerator {
     }
 
     croak(message) {
+        this.positions = this.getPositions();
+
         if (message instanceof Error) {
             message.msg += ` at ` + this.getPositionMessage();
             throw message;
@@ -151,6 +144,7 @@ export default class CodeGenerator {
 
         this.currentNode = this.ast;
         this.print(this.ast);
+        timeLog("CodeGenerator.print(this.ast)");
 
         if (this.nestingLevels.length &&
             this.nestingLevels[this.nestingLevels.length - 1] === null) {
@@ -165,6 +159,8 @@ export default class CodeGenerator {
                 this.nestingLevels[i - 1] = this.nestingLevels[i];
             }
         }
+
+        timeLog("CodeGenerator@processNestingLevels");
 
         let lines = map(this.lines, (line, index) => {
             const nestingLevel = this.nestingLevels[index];
@@ -204,7 +200,13 @@ export default class CodeGenerator {
             return leader + getIndentString(indentLevel) + line;
         });
 
-        return fastJoin(lines, "\n");
+        timeLog("CodeGenerator@processedLines");
+
+        const out = fastJoin(lines, "\n");
+
+        timeLog("CodeGenerator@joinedLines");
+
+        return out;
     }
 
     generate() {
@@ -236,8 +238,6 @@ export default class CodeGenerator {
     }
 
     _pushLineHead(text) {
-        this.assert(text !== undefined && text !== "undefined", "text does not equal undefined");
-
         this.lines.push(text);
 
         this.linePairings.push(null);
@@ -644,11 +644,11 @@ export default class CodeGenerator {
     }
 
     isExpression(node) {
-        return node.type.endsWith("Expression");
+        return endsWith(node.type, "Expression");
     }
 
     isPattern(node) {
-        return node.type.endsWith("Pattern");
+        return endsWith(node.type, "Pattern");
     }
 
     isSingleItem(node) {
@@ -663,7 +663,7 @@ export default class CodeGenerator {
     }
 
     isStatement(node) {
-        return node.type.endsWith("Statement");
+        return endsWith(node.type, "Statement");
     }
 
     isFor(node) {
