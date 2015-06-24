@@ -229,28 +229,28 @@ export default class CodeGenerator {
     pushBlackspace(text) {
         this.assert(!isGreyspace(text), `${text} should not be greyspace`);
 
-        this._pushLineTail(text, this.getNestingLevel());
+        this._pushLineTail(text, true);
     }
 
     pushGreyspace(text) {
         this.assert(isGreyspace(text), `${text} should be greyspace`);
 
         if (text === "") {
-            this._pushLineTail("", null);
+            this._pushLineTail("", false);
             return;
         } else if (/^\n[^\S\n]*$/.test(text)) {
-            this._pushLineTail("", null);
+            this._pushLineTail("", false);
             this._pushLineHead("");
             return;
         } else if (text === " ") {
-            this._pushLineTail(" ", null);
+            this._pushLineTail(" ", false);
             return;
         }
 
         let formattedText = this._formatGreyspace(text);
         let lines = formattedText.split("\n");
 
-        this._pushLineTail(lines.shift(), null);
+        this._pushLineTail(lines.shift(), false);
 
         each(lines, line => {
             this._pushLineHead(line);
@@ -268,15 +268,19 @@ export default class CodeGenerator {
         this.nestingLevels.push(null);
     }
 
-    _pushLineTail(text, nestingLevel) {
+    _pushLineTail(text, getNestingLevel) {
         this.assert(text !== undefined, "text does not equal undefined");
         this.assert(this.lines.length > 0, "At least one line");
 
         this.lines[this.lines.length - 1] += text;
 
-        if (nestingLevel !== null &&
+        if (getNestingLevel &&
             this.nestingLevels[this.nestingLevels.length - 1] === null) {
-            this.nestingLevels[this.nestingLevels.length - 1] = nestingLevel;
+
+            let nestingLevel = this.getNestingLevel();
+            if (nestingLevel !== null) {
+                this.nestingLevels[this.nestingLevels.length - 1] = nestingLevel;
+            }
         }
     }
 
@@ -484,10 +488,9 @@ export default class CodeGenerator {
     }
 
     startGroup() {
-        const nestingLevel = this.getNestingLevel();
-        this.lineLog("Starting group:", this.currentNode.type,
-            "with nestingLevel:", nestingLevel, "on line:", this.lines.length - 1);
-        this._pushLineTail("", nestingLevel);
+        this.lineLog("Starting group:", this.currentNode.type, "on line:", this.lines.length - 1);
+
+        this._pushLineTail("", true);
 
         this.openGroups.push(this.lines.length - 1);
         this._openGroups.push(this.currentNode.type);
