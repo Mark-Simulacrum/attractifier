@@ -281,10 +281,9 @@ export default class CodeGenerator {
     }
 
     _formatGreyspace(greyspace) {
-        // parseGreyspace will throw if given a string that is not greyspace.
-        const parsedGreyspaces = parseGreyspace(greyspace);
+        this.assert(isGreyspace(greyspace), `${greyspace} must be greyspace`);
 
-        this.lineLog(`_formatGreyspace("${greyspace}"): ${JSON.stringify(parsedGreyspaces)}`);
+        const parsedGreyspaces = parseGreyspace(greyspace);
 
         let lineHandler = (line, index) => {
             if (index === 0) return line;

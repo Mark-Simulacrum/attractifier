@@ -67,8 +67,7 @@ export const parseGreyspace = memoize(function (string) {
         } else if (stream.consume(shebangRe)) {
             parsedNodes.push({ type: "shebang", value: stream.consumed });
         } else {
-            // Takes care of assertion that string is greyspace
-            throw new Error(`string ("${string}") is not greyspace`.replace(/\n/g, "\\n"));
+            return false;
         }
     }
 
