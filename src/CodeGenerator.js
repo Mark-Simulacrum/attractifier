@@ -296,7 +296,9 @@ export default class CodeGenerator {
         };
 
         let transformedString = "";
-        for (let greyspace of parsedGreyspaces) {
+        for (var i = 0; i < parsedGreyspaces.length; i++) {
+            let greyspace = parsedGreyspaces[i];
+
             if (greyspace.type === "blockComment") {
                 greyspace.value = this._formatBlockComment(greyspace.value);
             } else {

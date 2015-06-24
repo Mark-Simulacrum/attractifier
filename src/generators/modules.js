@@ -14,8 +14,9 @@ export function ImportDeclaration(node) {
     if (node.specifiers.length) {
         let didIndent = false;
 
-        for (let [index, specifier] of node.specifiers.entries()) {
-            let isLast = index + 1 === node.specifiers.length;
+        for (var i = 0; i < node.specifiers.length; i++) {
+            let specifier = node.specifiers[i];
+            let isLast = i + 1 === node.specifiers.length;
 
             if (this.isCurrent("{")) {
                 this.ensure("{");
