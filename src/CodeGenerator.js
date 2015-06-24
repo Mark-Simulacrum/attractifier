@@ -323,7 +323,7 @@ export default class CodeGenerator {
      */
     getNestingLevel() {
         let parentCount = 0;
-        let parents = this.parents.concat(this.currentNode);
+        let parents = this.parents;
 
         // Start at index 1 to prevent out-of-bounds array access for prevParent
         // And skip first 3 nodes (Program and _statements, and next top-level)
@@ -333,9 +333,12 @@ export default class CodeGenerator {
         //  1: _statements,
         //  2: effectively ignored by not having any real parents
         //  3+: nodes we need to count
-        for (let i = 3; i < parents.length; i++) {
+        //
+        // Optimize currentNode being part of parents by adding it in here,
+        // instead of cloning entire parents array each time.
+        for (let i = 3; i < parents.length + 1; i++) {
             let prevParent = parents[i - 1];
-            let currentParent = parents[i];
+            let currentParent = i === parents.length ? this.currentNode : parents[i];
 
             // ignore function body that AST disguises as BlockStatement
             if (this.isFunction(currentParent)) continue;
@@ -347,10 +350,6 @@ export default class CodeGenerator {
                 parentCount++;
             }
         }
-
-        this.lineLog("nestingLevel:", parentCount,
-            "currentNode:", this.currentNode.type + "\n\t" +
-            JSON.stringify(this.parents.slice(3).map(parent => parent.type)));
 
         return parentCount;
     }
