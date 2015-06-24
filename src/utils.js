@@ -94,11 +94,19 @@ export function log(...messages) {
     }
 }
 
-// let lastTime = process.hrtime();
+let lastTime = process.hrtime();
+
+export function timeLogStart() {
+    lastTime = process.hrtime();
+}
+
 export function timeLog(event) {
-    // let diff = process.hrtime(lastTime);
-    // if (lastTime !== null) {
-        // console.log(prettyTime(diff) + ":", event);
-    // }
-    // lastTime = process.hrtime();
+    let diff = process.hrtime(lastTime);
+    if (lastTime !== null) {
+        let nanoSeconds = diff[0] * 1e9 + diff[1];
+        if (nanoSeconds / 1000 > 100) { // Greater than 100 microseconds
+            console.log(prettyTime(diff) + ":", event);
+        }
+    }
+    lastTime = process.hrtime();
 }

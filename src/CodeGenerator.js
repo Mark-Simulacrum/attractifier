@@ -4,7 +4,15 @@ import map from "lodash.map";
 import endsWith from "lodash.endswith";
 
 import Iterator from "./iterator";
-import {parseGreyspace, isGreyspace, log, timeLog, getIndentString, shouldWrite as WillWrite} from "./utils";
+import {
+    parseGreyspace,
+    isGreyspace,
+    log,
+    timeLog,
+    timeLogStart,
+    getIndentString,
+    shouldWrite as WillWrite
+} from "./utils";
 
 function fastJoin(array, joiner = "") {
     let string = "";
@@ -191,8 +199,6 @@ export default class CodeGenerator {
             // leader += fastJoin(table, " ")
             // leader += repeat(" ", 20 - leader.length) + "|";
 
-            // leader = "";
-
             if (/^\s*$/.test(line)) {
                 return leader;
             }
@@ -225,8 +231,21 @@ export default class CodeGenerator {
 
     pushGreyspace(text) {
         this.assert(isGreyspace(text), `${text} should be greyspace`);
-        text = this._formatGreyspace(text);
-        let lines = text.split("\n");
+
+        if (text === "") {
+            this._pushLineTail("", null);
+            return;
+        } else if (/^\n[^\S\n]*$/.test(text)) {
+            this._pushLineTail("", null);
+            this._pushLineHead("");
+            return;
+        } else if (text === " ") {
+            this._pushLineTail(" ", null);
+            return;
+        }
+
+        let formattedText = this._formatGreyspace(text);
+        let lines = formattedText.split("\n");
 
         this._pushLineTail(lines.shift(), null);
 
@@ -370,7 +389,6 @@ export default class CodeGenerator {
                 const previousIndentLevel = this.indentLevels[i];
                 const previousNestingLevel = this.nestingLevels[i];
 
-                // this.lineLog(`running: iteration #${index - 1 - i};\n\tpassed index=${index}; nestingLevel=${nestingLevel}; previousNestingLevel=${previousNestingLevel}`);
                 this.assert(previousNestingLevel !== null, `previousNestingLevel is not null at ${i} with ${index}`);
                 this.assert(previousIndentLevel !== undefined, `indentLevels is defined at ${i} with ${index}`);
 
@@ -464,8 +482,6 @@ export default class CodeGenerator {
 
             this.assert(this.openGroups.length >= levelsUp);
             const pairing = this.openGroups[this.openGroups.length - levelsUp];
-
-            this.lineLog("pairing:", pairing, "to", this.lines.length - 1, JSON.stringify(this._openGroups));
 
             // Only set the line pairing for the current line if we are the
             // first blackspace being pushed onto the line
