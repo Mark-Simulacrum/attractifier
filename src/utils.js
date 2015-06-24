@@ -3,6 +3,8 @@ import repeat from "lodash.repeat";
 import memoize from "lodash.memoize";
 import prettyTime from "pretty-hrtime";
 
+import types from "./types";
+
 class TextStream {
     constructor(input) {
         this.input = input;
@@ -71,6 +73,17 @@ export const parseGreyspace = memoize(function (string) {
     }
 
     return parsedNodes;
+});
+
+export const nestingLevelType = memoize(function (type) {
+    const typeObj = { type };
+
+    if (types.isExpression(typeObj) ||
+        types.isPattern(typeObj) || types.isSingleItem(typeObj)) return "_expression_";
+    if (types.isExpressionLike(typeObj))
+        return `_expression_like_${type}`;
+
+    return type;
 });
 
 export const getIndentString = memoize(function (indentLevel) {

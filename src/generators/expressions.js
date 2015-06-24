@@ -1,3 +1,5 @@
+import types from "../types";
+
 export function ParenthesizedExpression(node) {
     this.ensure("(");
     this.ensureVoid();
@@ -86,8 +88,8 @@ export function Property(node) {
             this.ensure("]");
             this.ensureVoid();
         } else {
-            if (this.isAssignmentPattern(node.value) &&
-                this.isIdentifier(node.key) &&
+            if (types.isAssignmentPattern(node.value) &&
+                types.isIdentifier(node.key) &&
                 node.key.name === node.value.left.name) {
                 this.print(node.value);
                 return;
@@ -96,8 +98,8 @@ export function Property(node) {
             this.print(node.key);
 
             if (node.shorthand) {
-                if (this.isIdentifier(node.key) &&
-                    this.isIdentifier(node.value) &&
+                if (types.isIdentifier(node.key) &&
+                    types.isIdentifier(node.value) &&
                     node.key.name === node.value.name) {
                     return;
                 }
@@ -173,9 +175,9 @@ export function NewExpression(node) {
 export function UnaryExpression(node) {
     let HasSpace;
 
-    if (this.isUpdateExpression(node.argument)) {
+    if (types.isUpdateExpression(node.argument)) {
         HasSpace = true;
-    } else if (this.isUnaryExpression(node.argument)) {
+    } else if (types.isUnaryExpression(node.argument)) {
         HasSpace = node.argument.operator !== "!";
     } else {
         HasSpace = node.operator === "delete" ||
@@ -216,7 +218,7 @@ export function ArrowFunctionExpression(node) {
         this.ensureSpace();
     }
 
-    if (node.params.length === 1 && this.isIdentifier(node.params[0])) {
+    if (node.params.length === 1 && types.isIdentifier(node.params[0])) {
         this.print(node.params[0]);
     } else {
         this._params(node);

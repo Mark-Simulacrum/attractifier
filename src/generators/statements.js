@@ -1,3 +1,5 @@
+import types from "../types";
+
 export function Program(node) {
     this.ensureVoid();
 
@@ -279,9 +281,9 @@ export function ForInStatement(node) {
     this.print(node.left);
     this.ensureSpace();
 
-    if (this.isForInStatement(node)) {
+    if (types.isForInStatement(node)) {
         this.ensure("in");
-    } else if (this.isForOfStatement(node)) {
+    } else if (types.isForOfStatement(node)) {
         this.ensure("of");
     }
 

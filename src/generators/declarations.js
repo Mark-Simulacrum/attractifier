@@ -1,3 +1,5 @@
+import types from "../types";
+
 export function VariableDeclarator(node) {
     this.print(node.id);
 
@@ -16,7 +18,7 @@ export function VariableDeclaration(node, parent) {
 
     this._printList(node.declarations, this.nodeContainsNewlines(node));
 
-    if (!this.isFor(parent)) {
+    if (!types.isFor(parent)) {
         this.ensureVoid();
         this.ensure(";");
     }

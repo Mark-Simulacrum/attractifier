@@ -4,6 +4,7 @@ import map from "lodash.map";
 import endsWith from "lodash.endswith";
 
 import Iterator from "./iterator";
+import types from "./types";
 import {
     parseGreyspace,
     isGreyspace,
@@ -11,6 +12,7 @@ import {
     timeLog,
     timeLogStart,
     getIndentString,
+    nestingLevelType,
     shouldWrite as WillWrite
 } from "./utils";
 
@@ -257,6 +259,8 @@ export default class CodeGenerator {
     }
 
     _pushLineHead(text) {
+        this.assert(text !== undefined, "text does not equal undefined");
+
         this.lines.push(text);
 
         this.linePairings.push(null);
@@ -266,14 +270,11 @@ export default class CodeGenerator {
     _pushLineTail(text, nestingLevel) {
         this.assert(text !== undefined, "text does not equal undefined");
         this.assert(this.lines.length > 0, "At least one line");
-        this.assert(this.lines[this.lines.length - 1] !== undefined, "Last line isn't undefined");
 
         this.lines[this.lines.length - 1] += text;
 
-        if (nestingLevel === null) return;
-
-        if (this.nestingLevels[this.nestingLevels.length - 1] === null) {
-            this.lineLog("setting nestingLevel to", nestingLevel);
+        if (nestingLevel !== null &&
+            this.nestingLevels[this.nestingLevels.length - 1] === null) {
             this.nestingLevels[this.nestingLevels.length - 1] = nestingLevel;
         }
     }
@@ -324,18 +325,6 @@ export default class CodeGenerator {
         return fastJoin(lines, "\n");
     }
 
-    myType(type) {
-        if (type === null) return "null";
-
-        const typeObj = { type };
-
-        if (this.isExpression(typeObj) ||
-            this.isPattern(typeObj) || this.isSingleItem(typeObj)) return "_expression_";
-        if (this.isExpressionLike(typeObj))
-            return `_expression_like_${type}`;
-        return type;
-    }
-
     /**
      * Count all elements in this.parents;
      * except for those consecutively followed by the same type.
@@ -360,12 +349,12 @@ export default class CodeGenerator {
             let currentParent = i === parents.length ? this.currentNode : parents[i];
 
             // ignore function body that AST disguises as BlockStatement
-            if (this.isFunction(currentParent)) continue;
-            if (this.isIdentifier(currentParent)) continue;
-            if (this.isBlockStatement(currentParent) && this.isFunction(prevParent)) continue;
-            if (this.is_statements(prevParent)) continue;
+            if (types.isFunction(currentParent)) continue;
+            if (types.isIdentifier(currentParent)) continue;
+            if (types.isBlockStatement(currentParent) && types.isFunction(prevParent)) continue;
+            if (types.is_statements(prevParent)) continue;
 
-            if (this.myType(currentParent.type) !== this.myType(prevParent.type)) {
+            if (nestingLevelType(currentParent.type) !== nestingLevelType(prevParent.type)) {
                 parentCount++;
             }
         }
@@ -465,8 +454,8 @@ export default class CodeGenerator {
         if (currentValue === "}" || currentValue === ">" ||
             currentValue === "]" ||
             (currentValue === ")" &&
-                (this.isFunction(this.currentNode) ||
-                    this.isCallExpression(this.parents[this.parents.length - 2])))) {
+                (types.isFunction(this.currentNode) ||
+                    types.isCallExpression(this.parents[this.parents.length - 2])))) {
 
             let levelsUp = 0;
 
@@ -521,8 +510,8 @@ export default class CodeGenerator {
         this.lineLog(`ensureSpace("${current}")`);
 
         // current is whitespace (not including newlines)
-        const allowNewlines = this.isExpressionLike(this.currentNode) ||
-            this.isFunction(this.currentNode);
+        const allowNewlines = types.isExpressionLike(this.currentNode) ||
+            types.isFunction(this.currentNode);
 
         if (
             (allowNewlines && /^[^\S\n]*$/.test(current)) ||
@@ -652,57 +641,16 @@ export default class CodeGenerator {
         let { start, end } = this._getRange(node);
         return this.input.slice(start, end).indexOf("\n") >= 0;
     }
-
-    isFunction(node) {
-        return this.isFunctionExpression(node) || this.isFunctionDeclaration(node) ||
-            this.isMethodDefinition(node) || this.isArrowFunctionExpression(node);
-    }
-
-    isExpression(node) {
-        return endsWith(node.type, "Expression");
-    }
-
-    isPattern(node) {
-        return endsWith(node.type, "Pattern");
-    }
-
-    isSingleItem(node) {
-        return this.isLiteral(node) ||
-            this.isTemplateLiteral(node) || this.isIdentifier(node);
-    }
-
-    isExpressionLike(node) {
-        return this.isExpression(node) || this.isPattern(node) ||
-                    this.is_params(node) || this.isIdentifier(node) ||
-                    this.isLiteral(node);
-    }
-
-    isStatement(node) {
-        return endsWith(node.type, "Statement");
-    }
-
-    isFor(node) {
-        return this.isForStatement(node) ||
-            this.isForInStatement(node) ||
-            this.isForOfStatement(node);
-    }
 }
 
 import * as generators from "./generators";
+
 const keys = Object.keys(generators);
-
-function isFuncGenerator(type) {
-    return function (node) {
-        return node && node.type === type;
-    };
-}
-
 for (let i = keys.length - 1; i >= 0; i--) {
     let generatorName = keys[i];
 
     if (CodeGenerator.prototype[generatorName])
         throw new Error(`${generatorName} already added to CodeGenerator.`);
 
-    CodeGenerator.prototype[`is${generatorName}`] = isFuncGenerator(generatorName);
     CodeGenerator.prototype[generatorName] = generators[generatorName];
 }
