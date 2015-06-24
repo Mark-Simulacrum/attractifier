@@ -32,28 +32,29 @@ export function TaggedTemplateExpression(node) {
 
 export function TemplateElement(node) {
     if (isGreyspace(node.value.raw)) {
-        this.ensureVoid();
+        // Workaround logic in ensureVoid, ensureSpace, and ensureNewline
+        // that attempts to modify the current value.
+        // We don't want to modify it.
+        let currentVal = this.iterator.current();
+        this.pushGreyspace(currentVal);
+        this.iterator.advance();
     } else {
         this.ensure(node.value.raw);
+        this.ensureVoid();
     }
 }
 
 export function TemplateLiteral(node) {
     this.ensure("`");
 
-    let quasis = node.quasis;
-    let len = quasis.length;
-
-    if (this.isCurrent("") && quasis[0] && quasis[0].value.raw !== "") {
+    if (!isGreyspace(node.quasis[0].value.raw)) {
         this.ensureVoid();
     }
-    for (var i = 0; i < len; i++) {
-        this.print(quasis[i]);
+
+    for (let i = 0; i < node.quasis.length; i++) {
+        this.print(node.quasis[i]);
 
         if (node.expressions[i]) {
-            if (!this.isCurrent("${")) {
-                this.ensureVoid();
-            }
             this.ensure("${");
             this.ensureVoid();
 
@@ -61,12 +62,13 @@ export function TemplateLiteral(node) {
 
             this.ensureVoid();
             this.ensure("}");
-            if (quasis[i + 1].value.raw !== "") {
+
+            if (!node.quasis[i].isLast && !isGreyspace(node.quasis[i + 1].value.raw)) {
                 this.ensureVoid();
             }
         }
+
     }
 
-    if (this.isCurrent("")) this.ensureVoid();
     this.ensure("`");
 }

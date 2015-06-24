@@ -44,5 +44,8 @@ t = assign(t, {
         return this.isForStatement(node) ||
             this.isForInStatement(node) ||
             this.isForOfStatement(node);
+    },
+    isTemplateString(node) {
+        return this.isTemplateLiteral(node) || this.isTemplateElement(node);
     }
 });
