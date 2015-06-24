@@ -227,13 +227,13 @@ export default class CodeGenerator {
     }
 
     pushBlackspace(text) {
-        this.assert(!isGreyspace(text), `${text} should not be greyspace`);
+        this.assert(!isGreyspace(text), `"${text}" should not be greyspace`);
 
         this._pushLineTail(text, true);
     }
 
     pushGreyspace(text) {
-        this.assert(isGreyspace(text), `${text} should be greyspace`);
+        this.assert(isGreyspace(text), `"${text}" should be greyspace`);
 
         if (text === "") {
             this._pushLineTail("", false);
@@ -548,7 +548,7 @@ export default class CodeGenerator {
         } else if (isGreyspace(current)) {
             return this.pushGreyspace(current);
         } else {
-            this.croak("unhandled case in ensureVoid");
+            this.croak(`unhandled case in ensureVoid: ${current}`);
         }
 
     }
