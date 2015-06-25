@@ -3,7 +3,7 @@ export default function (babel) {
         metadata: {
             group: "init"
         },
-        CallExpression: function (node, parent, scope, file) {
+        CallExpression(node) {
             if (this.get("callee").matchesPattern("this.lineLog") ||
                 (babel.types.isIdentifier(node.callee) && node.callee.name === "timeLog") ||
                 (babel.types.isIdentifier(node.callee) && node.callee.name === "timeLogStart")) {

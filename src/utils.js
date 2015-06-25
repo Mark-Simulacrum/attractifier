@@ -1,7 +1,6 @@
 import fs from "fs";
 import repeat from "lodash.repeat";
 import memoize from "lodash.memoize";
-import prettyTime from "pretty-hrtime";
 
 import types from "./types";
 
@@ -26,26 +25,37 @@ class TextStream {
         return false;
     }
 
+    consumeWhitespace() {
+        return this.consume(/^\s+/);
+    }
+
+    consumeShebang() {
+        return this.consume(/^#!.*\n/);
+    }
+
+    consumeLineComment() {
+        return this.consume(/^\/\/[^\n]*/);
+    }
+
+    consumeBlockComment() {
+        return this.consume(/^\/\*[\W\S]*?\*\//);
+    }
+
     atEnd() {
         return this.char >= this.length;
     }
 }
 
-const whitespaceRe = /^\s+/;
-const shebangRe = /^#!.*\n/;
-const lineCommentRe = /^\/\/[^\n]*/;
-const blockCommentRe = /^\/\*[\W\S]*?\*\//;
-
 export const isGreyspace = memoize(function (string) {
     let stream = new TextStream(string);
 
     // Consume shebang
-    stream.consume(shebangRe);
 
     while (!stream.atEnd()) {
-        let consumed = stream.consume(whitespaceRe) ||
-            stream.consume(lineCommentRe) ||
-            stream.consume(blockCommentRe);
+        let consumed = stream.consumeWhitespace() ||
+            stream.consumeLineComment() ||
+            stream.consumeBlockComment() ||
+            stream.consumeShebang();
         if (!consumed) return false;
     }
 
@@ -58,13 +68,13 @@ export const parseGreyspace = memoize(function (string) {
     let stream = new TextStream(string);
 
     while (!stream.atEnd()) {
-        if (stream.consume(whitespaceRe)) {
+        if (stream.consumeWhitespace()) {
             parsedNodes.push({ type: "whitespace", value: stream.consumed });
-        } else if (stream.consume(lineCommentRe)) {
+        } else if (stream.consumeLineComment()) {
             parsedNodes.push({ type: "lineComment", value: stream.consumed });
-        } else if (stream.consume(blockCommentRe)) {
+        } else if (stream.consumeBlockComment()) {
             parsedNodes.push({ type: "blockComment", value: stream.consumed });
-        } else if (stream.consume(shebangRe)) {
+        } else if (stream.consumeShebang()) {
             parsedNodes.push({ type: "shebang", value: stream.consumed });
         } else {
             return false;
@@ -106,8 +116,8 @@ export function log(...messages) {
     }
 }
 
+import prettyTime from "pretty-hrtime";
 let lastTime = process.hrtime();
-
 export function timeLogStart() {
     // lastTime = process.hrtime();
 }

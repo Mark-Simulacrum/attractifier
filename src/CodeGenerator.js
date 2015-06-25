@@ -1,7 +1,6 @@
 import filter from "lodash.filter";
 import each from "lodash.foreach";
 import map from "lodash.map";
-import endsWith from "lodash.endswith";
 
 import Iterator from "./iterator";
 import types from "./types";
@@ -57,7 +56,7 @@ export default class CodeGenerator {
                 } else {
                     return message;
                 }
-            })
+            });
             log(`${this.lines.length - 1}:`, ...messages);
         }
     }

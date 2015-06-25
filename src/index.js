@@ -47,19 +47,20 @@ try {
         const token = input.slice(start, end);
         const lastToken = modifiedTokens[modifiedTokens.length - 1];
 
-        if ((lastToken === undefined || !isGreyspace(lastToken)) && !isGreyspace(token)) {
+        if ((modifiedTokens.length === 0 || !isGreyspace(lastToken)) && !isGreyspace(token)) {
             modifiedTokens.push("");
         }
 
         modifiedTokens.push(token);
 
-        const semicolon = semicolons[semicolonIndex];
-        if (semicolons.length && start < semicolon && semicolon <= end) {
-            const semiColonPos = semicolon - start;
-            modifiedTokens.push("");
-            modifiedTokens.push(";");
+        if (semicolons.length) {
+            const semicolon = semicolons[semicolonIndex];
+            if (start < semicolon && semicolon <= end) {
+                modifiedTokens.push("");
+                modifiedTokens.push(";");
 
-            semicolonIndex++;
+                semicolonIndex++;
+            }
         }
     }
 
