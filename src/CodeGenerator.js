@@ -125,6 +125,7 @@ export default class CodeGenerator {
 
     getPositionMessage() {
         let pos = this.getPosition();
+        if (!pos) return "unkown position";
         return `${pos.line}:${pos.column}`;
     }
 
@@ -150,6 +151,9 @@ export default class CodeGenerator {
     }
 
     _generate() {
+
+        if (this.parsedInput.length === 0) return "";
+
         timeLogStart();
         this._pushLineHead("", null);
 
