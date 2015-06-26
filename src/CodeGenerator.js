@@ -36,7 +36,6 @@ export default class CodeGenerator {
         this.indentLevels = [];
 
         this.openGroups = [];
-        this._openGroups = [];
         this.linePairings = [];
 
         this.nestingLevels = [];
@@ -150,7 +149,6 @@ export default class CodeGenerator {
     }
 
     _generate() {
-
         if (this.parsedInput.length === 0) return "";
 
         timeLogStart();
@@ -205,7 +203,7 @@ export default class CodeGenerator {
             // leader += fastJoin(table, " ")
             // leader += repeat(" ", 20 - leader.length) + "|";
 
-            if (/^\s*$/.test(line)) {
+            if (line === "" || /^\s*$/.test(line)) {
                 return leader;
             }
 
@@ -239,11 +237,6 @@ export default class CodeGenerator {
         this.assert(isGreyspace(text), `"${text}" should be greyspace`);
 
         if (text === "") {
-            this._pushLineTail("", false);
-            return;
-        } else if (/^\n[^\S\n]*$/.test(text)) {
-            this._pushLineTail("", false);
-            this._pushLineHead("");
             return;
         } else if (text === " ") {
             this._pushLineTail(" ", false);
@@ -287,16 +280,16 @@ export default class CodeGenerator {
         }
     }
 
+    _lineHandler(line, index) {
+        if (index === 0) return line;
+
+        return line.trim();
+    }
+
     _formatGreyspace(greyspace) {
         this.assert(isGreyspace(greyspace), `${greyspace} must be greyspace`);
 
         const parsedGreyspaces = parseGreyspace(greyspace);
-
-        let lineHandler = (line, index) => {
-            if (index === 0) return line;
-
-            return line.trim();
-        };
 
         let transformedString = "";
         for (var i = 0; i < parsedGreyspaces.length; i++) {
@@ -306,7 +299,7 @@ export default class CodeGenerator {
                 greyspace.value = this._formatBlockComment(greyspace.value);
             } else {
                 let lines = greyspace.value.split("\n");
-                lines = map(lines, lineHandler);
+                lines = map(lines, this._lineHandler);
                 greyspace.value = fastJoin(lines, "\n");
             }
 
@@ -462,17 +455,17 @@ export default class CodeGenerator {
         this.assert(currentValue === string,
             `current value (${currentValue}) is not equal to string (${string})`);
 
-        if (currentValue === "}" || currentValue === ">" ||
-            currentValue === "]" ||
+        if (currentValue === "}" || currentValue === "]" ||
             (currentValue === ")" &&
                 (types.isFunction(this.currentNode) ||
-                    types.isCallExpression(this.parents[this.parents.length - 2])))) {
+                    types.isCallExpression(this.parents[this.parents.length - 2])))
+            || currentValue === ">") {
 
             let levelsUp = 0;
 
             // if the parent of the current node is _statements, then we
             // want to use ourselves.
-            if (this._openGroups[this._openGroups.length - 2] === "_statements" ||
+            if (this.parents[this.parents.length - 2].type === "_statements" ||
                 this.currentNode.type === "_member_expression_accessor" ||
                 this.currentNode.type === "ArrayExpression") {
                 levelsUp = 1;
@@ -492,26 +485,6 @@ export default class CodeGenerator {
 
         this.pushBlackspace(currentValue);
         this.iterator.advanceUnlessAtEnd();
-    }
-
-    startGroup() {
-        this.lineLog("Starting group:", this.currentNode.type, "on line:", this.lines.length - 1);
-
-        this._pushLineTail("", true);
-
-        this.openGroups.push(this.lines.length - 1);
-        this._openGroups.push(this.currentNode.type);
-    }
-
-    stopGroup() {
-        const line = this.openGroups.pop();
-        const type = this._openGroups.pop();
-
-        this.lineLog("Stopping group:", this.currentNode.type,
-            type, "from line:", line);
-
-        // We are synchronized with currentNode
-        this.assert(type === this.currentNode.type);
     }
 
     ensureSpace() {
@@ -560,7 +533,7 @@ export default class CodeGenerator {
         let current = this.iterator.current();
         this.iterator.advanceUnlessAtEnd();
 
-        if (!/\n/.test(current)) { // contains newline
+        if (current.indexOf("\n") === -1) { // contains newline
             current += "\n";
         }
 
@@ -597,8 +570,19 @@ export default class CodeGenerator {
     }
 
     printNodeAs(node, parent, type) {
-        // generator(node, parent)
         this[type](node, parent);
+    }
+
+    startGroup() {
+        this.lineLog("Starting group:", this.currentNode.type, "on line:", this.lines.length - 1);
+
+        this._pushLineTail("", true);
+
+        this.openGroups.push(this.lines.length - 1);
+    }
+
+    stopGroup() {
+        this.openGroups.pop();
     }
 
     enterPrint(node) {
