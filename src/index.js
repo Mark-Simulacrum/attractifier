@@ -6,10 +6,9 @@ import {timeLog} from "./utils";
 import CodeGenerator from "./CodeGenerator";
 import processTokens from "./process-tokens";
 
+const inputFile = process.argv[2];
 
 function processInput() {
-    const inputFile = process.argv[2];
-
     if (!inputFile) {
         process.stderr.write("Usage: node ./lib/index.js FILE\n");
         process.exit(1);
