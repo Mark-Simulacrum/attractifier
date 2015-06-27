@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "npm run build-without-logging",
-    "build-plugin": "mkdir lib && babel src/babel-plugin-strip-logging.js > lib/babel-plugin-strip-logging.js",
+    "build-plugin": "mkdir -p lib && babel src/babel-plugin-strip-logging.js > lib/babel-plugin-strip-logging.js",
     "build-watch": "babel --watch --out-dir lib src",
     "build-without-logging": "npm run build-plugin && babel --plugins ./lib/babel-plugin-strip-logging.js src --out-dir lib"
   },
