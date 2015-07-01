@@ -76,6 +76,7 @@ export default class CodeGenerator {
         let lastPos = 0;
         for (let pos = 0; pos < origString.length; pos++) {
             let char = origString.charAt(pos);
+
             if (char === "\n") {
                 linesSeen++;
                 charsSeen = 0;
@@ -127,23 +128,19 @@ export default class CodeGenerator {
         return `${pos.line}:${pos.column}`;
     }
 
-    croak(message) {
+    croak(error) {
         this.positions = this.getPositions();
 
-        if (message instanceof Error) {
-            message.msg += ` at ` + this.getPositionMessage();
-            throw message;
-        } else {
-            throw new Error(message + ` at ` + this.getPositionMessage());
-        }
+        error.msg += ` at ` + this.getPositionMessage();
+        throw error;
     }
 
     assert(condition, message) {
         if (!condition) {
             if (message) {
-                this.croak("AssertionError: " + message.replace(/\n/g, "\\n"));
+                throw new Error("AssertionError: " + message.replace(/\n/g, "\\n"));
             } else {
-                this.croak("AssertionError: message not given");
+                throw new Error("AssertionError: message not given");
             }
         }
     }
@@ -507,7 +504,7 @@ export default class CodeGenerator {
 
             this.pushGreyspace(current);
         } else {
-            this.croak(`ensuring space with not a space: "${current}"`);
+            throw new Error(`ensuring space with not a space: "${current}"`);
         }
 
         this.iterator.advanceUnlessAtEnd();
@@ -524,7 +521,7 @@ export default class CodeGenerator {
         } else if (isGreyspace(current)) {
             return this.pushGreyspace(current);
         } else {
-            this.croak(`unhandled case in ensureVoid: ${current}`);
+            throw new Error(`unhandled case in ensureVoid: ${current}`);
         }
 
     }
@@ -549,15 +546,15 @@ export default class CodeGenerator {
     }
 
     print(node) {
-        try {
-            let parent = this.enterPrint(node);
+        let parent = this.enterPrint(node);
 
+        if (this[node.type]) {
             this[node.type](node, parent);
-
-            this.exitPrint(parent);
-        } catch (error) {
-            this.croak(error);
+        } else {
+            throw new Error(new Error(`can't handle printing node type: ${node.type}`));
         }
+
+        this.exitPrint(parent);
     }
 
     /**
