@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "babel": "^5.5.5",
+    "mocha": "^2.2.5",
     "pretty-hrtime": "^1.0.0"
   },
   "version": "1.0.0",

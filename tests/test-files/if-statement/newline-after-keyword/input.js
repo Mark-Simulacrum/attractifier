@@ -1,0 +1,4 @@
+if
+(CONDITION) {
+    STATEMENT;
+}

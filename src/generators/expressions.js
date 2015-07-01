@@ -218,7 +218,7 @@ export function ArrowFunctionExpression(node) {
         this.ensureSpace();
     }
 
-    if (node.params.length === 1 && types.isIdentifier(node.params[0])) {
+    if (node.params.length === 1 && !this.isCurrent("(")) {
         this.print(node.params[0]);
     } else {
         this._params(node);
