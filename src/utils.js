@@ -116,8 +116,8 @@ export function log(...messages) {
     }
 }
 
-import prettyTime from "pretty-hrtime";
-let lastTime = process.hrtime();
+// import prettyTime from "pretty-hrtime";
+// let lastTime = process.hrtime();
 export function timeLogStart() {
     // lastTime = process.hrtime();
 }

@@ -9,11 +9,11 @@
     "lodash.map": "^3.1.4",
     "lodash.memoize": "^3.0.4",
     "lodash.repeat": "^3.0.0",
-    "pretty-hrtime": "^1.0.0",
     "source-map-support": "^0.3.1"
   },
   "devDependencies": {
-    "babel": "^5.5.5"
+    "babel": "^5.5.5",
+    "pretty-hrtime": "^1.0.0"
   },
   "version": "1.0.0",
   "description": "JavaScript pretty printer, built for speed and ES2015.",
