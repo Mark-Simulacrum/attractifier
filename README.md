@@ -4,6 +4,8 @@ Usage and installation are likely to change.
 
 Prettified output is sent to STDOUT (file descriptor 1).
 
+Global installation support is in the works, but not yet supported.
+
 ### Installation:
 ```
 git clone git@github.com:Mark-Simulacrum/pretty-generator.git
