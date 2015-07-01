@@ -28,6 +28,7 @@
   "bugs": {
     "url": "https://github.com/Mark-Simulacrum/attractifier/issues"
   },
+  "files": [ "lib", "LICENSE" ],
   "bin": "./lib/index.js",
   "main": "./lib/api/node.js",
   "homepage": "https://github.com/Mark-Simulacrum/attractifier/blob/master/README.md"

@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 /**
  * Bin file for executing attractifier.
  * Node API in api/node.js.
@@ -9,7 +11,6 @@ import { formatFile } from "./api/node";
 const inputFile = process.argv[2];
 try {
     if (!inputFile) {
-        process.stderr.write("Missing file operand:\n");
         process.stderr.write("Usage: node ./lib/index.js FILE\n");
         process.exit(1);
     }
