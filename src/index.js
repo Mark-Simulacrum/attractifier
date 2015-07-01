@@ -16,6 +16,8 @@ try {
 
     process.stdout.write(formatFile(inputFile));
 } catch (error) {
-    error.message = `${inputFile}: ${error.message}`;
+    if (error.message.indexOf(inputFile) !== 0) {
+        error.message = `${inputFile}: ${error.message}`;
+    }
     throw error;
 }

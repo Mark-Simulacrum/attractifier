@@ -29,7 +29,12 @@ export function formatText(text) {
 }
 
 export function formatFile(filename) {
-    const text = fs.readFileSync(filename).toString();
+    try {
+        const text = fs.readFileSync(filename).toString();
 
-    return formatText(text);
+        return formatText(text);
+    } catch (error) {
+        error.message = `${filename}: ${error.message}`;
+        throw error;
+    }
 }
