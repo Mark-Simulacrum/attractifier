@@ -1,16 +1,18 @@
 # pretty-generator
-This pretty printer is in an experimental stage. Usage and installation
-are likely to change.
+Pretty generator is in an experimental stage.
+Usage and installation are likely to change.
 
-Prettified output is sent to file descriptor 1.
-File descriptor 3 is used for debug output.
+Prettified output is sent to STDOUT (file descriptor 1).
 
-
-### Usage/Installation:
+### Installation:
 ```
 git clone git@github.com:Mark-Simulacrum/pretty-generator.git
 cd pretty-generator
-npm install
-npm run-script build
-node ./lib/index.js input.js 1>pretty-output.js
+make
+```
+
+### Usage:
+Usage assumes working directory to be root of the repository (pretty-generator from installation).
+```
+node ./lib/index.js input.js > pretty-output.js
 ```
