@@ -1,20 +1,31 @@
-# pretty-generator
-Pretty generator is in an experimental stage.
-Usage and installation are likely to change.
+# attractifier
+Depends on [node](https://nodejs.org/).
 
-Prettified output is sent to STDOUT (file descriptor 1).
+Supports ES6/ES2015.
 
-Global installation support is in the works, but not yet supported.
+Attractive output is sent to STDOUT (file descriptor 1).
 
 ### Installation:
 ```
-git clone git@github.com:Mark-Simulacrum/pretty-generator.git
-cd pretty-generator
-make
+npm install -g attractifier
 ```
 
 ### Usage:
-Usage assumes working directory to be root of the repository (pretty-generator from installation).
 ```
-node ./lib/index.js input.js > pretty-output.js
+attractifier ugly-input.js > attractive-output.js
+```
+
+### Example:
+
+Ugly input:
+```js
+let
+foo
+=
+bar;
+```
+
+Attractive output:
+```js
+let foo = bar;
 ```

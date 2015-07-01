@@ -1,5 +1,5 @@
 /**
- * Bin file for executing pretty-generator.
+ * Bin file for executing attractifier.
  * Node API in api/node.js.
  */
 import "source-map-support/register";
