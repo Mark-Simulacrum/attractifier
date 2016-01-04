@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import {describe, it} from "mocha";
 
-import {formatFile} from "../src/api/node";
+import {formatFile} from "../lib/api/node";
 
 const TestDirectory = "tests";
 
