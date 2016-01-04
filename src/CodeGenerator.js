@@ -319,6 +319,9 @@ export default class CodeGenerator {
 
             // Replace all leading whitespace with indentation + single whitespace
             line = line.replace(/^\s*\*?\s?/, replacement);
+
+            line = line.replace(/^(.*?)\s*$/, "$1");
+
             return line;
         });
 
