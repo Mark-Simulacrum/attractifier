@@ -8,6 +8,7 @@ import processTokens from "../process-tokens";
 function parseText(text) {
     let ast = parse(text, {
         preserveParens: true,
+        sourceType: "module",
         plugins: ["*"]
     });
     let tokens = ast.tokens;
