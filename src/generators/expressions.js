@@ -125,11 +125,6 @@ export function ObjectProperty(node) {
         this.ensure(":");
         this.ensureSpace();
 
-        if (node.kind !== "init") {
-            this.ensure(node.kind);
-            this.ensureSpace();
-        }
-
         this.print(node.value);
     }
 }
