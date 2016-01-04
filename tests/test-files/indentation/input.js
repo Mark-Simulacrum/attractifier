@@ -39,3 +39,12 @@ let p = new Promise((resolve, reject) => {
 let p = new Promise(function (resolve, reject) {
     return t;
 });
+
+let p = foo("apples", "pears",
+    "peaches" + "oranges", "fruit");
+
+assert(`${index} is already paired to ${this.linePairings[index]}, ` +
+    `attempting pairing to: ${toLine}`);
+
+assert("test" +
+    "testing");

@@ -330,7 +330,13 @@ export default class CodeGenerator {
      * except for those consecutively followed by the same type.
      */
     getNestingLevel() {
-        if (types.isTemplateString(this.currentNode)) return 0;
+        if (types.isTemplateString(this.currentNode)) {
+            let startLine = this.currentNode.loc.start.line;
+            let endLine = this.currentNode.loc.end.line;
+            if (startLine !== endLine) {
+                return 0;
+            }
+        }
 
         let parentCount = 0;
         let parents = this.parents;
