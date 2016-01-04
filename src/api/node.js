@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import {parse} from "babylon";
+import { parse } from "babylon";
 
 import CodeGenerator from "../CodeGenerator";
 import processTokens from "../process-tokens";
@@ -9,7 +9,7 @@ function parseText(text) {
     let ast = parse(text, {
         preserveParens: true,
         sourceType: "module",
-        plugins: ["*"]
+        plugins: [ "*" ]
     });
     let tokens = ast.tokens;
     let semicolons = ast.tokens.filter(token => token.type.label === ";");

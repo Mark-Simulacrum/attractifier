@@ -125,7 +125,8 @@ export default class CodeGenerator {
 
     getPositionMessage() {
         let pos = this.getPosition();
-        if (!pos) return "unkown position";
+        if (!pos)
+            return "unkown position";
         return `${pos.line}:${pos.column}`;
     }
 
@@ -147,7 +148,8 @@ export default class CodeGenerator {
     }
 
     _generate() {
-        if (this.parsedInput.length === 0) return "";
+        if (this.parsedInput.length === 0)
+            return "";
 
         timeLogStart();
         this._pushLineHead("", null);
@@ -279,7 +281,8 @@ export default class CodeGenerator {
     }
 
     _lineHandler(line, index) {
-        if (index === 0) return line;
+        if (index === 0)
+            return line;
 
         return line.trim();
     }
@@ -311,11 +314,13 @@ export default class CodeGenerator {
     _formatBlockComment(comment) {
         let lines = comment.split("\n");
         lines = map(lines, (line, index) => {
-            if (index === 0) return line;
+            if (index === 0)
+                return line;
 
             const isLast = index + 1 === lines.length;
             let replacement = " *";
-            if (!isLast) replacement += " ";
+            if (!isLast)
+                replacement += " ";
 
             // Replace all leading whitespace with indentation + single whitespace
             line = line.replace(/^\s*\*?\s?/, replacement);
@@ -360,11 +365,16 @@ export default class CodeGenerator {
             let currentParent = i === parents.length ? this.currentNode : parents[i];
 
             // ignore function body that AST disguises as BlockStatement
-            if (types.isFunction(currentParent)) continue;
-            if (types.isIdentifier(currentParent)) continue;
-            if (types.isBlockStatement(currentParent) && types.isFunction(prevParent)) continue;
-            if (types.is_statements(prevParent)) continue;
-            if (types.is_params(prevParent) && types.isFunction(currentParent)) continue;
+            if (types.isFunction(currentParent))
+                continue;
+            if (types.isIdentifier(currentParent))
+                continue;
+            if (types.isBlockStatement(currentParent) && types.isFunction(prevParent))
+                continue;
+            if (types.is_statements(prevParent))
+                continue;
+            if (types.is_params(prevParent) && types.isFunction(currentParent))
+                continue;
 
             if (nestingLevelType(currentParent.type) !== nestingLevelType(prevParent.type)) {
                 parentCount++;
@@ -393,7 +403,8 @@ export default class CodeGenerator {
                 this.assert(previousNestingLevel !== null, `previousNestingLevel is not null at ${i} with ${index}`);
                 this.assert(previousIndentLevel !== undefined, `indentLevels is defined at ${i} with ${index}`);
 
-                if (nestingLevel < previousNestingLevel) continue;
+                if (nestingLevel < previousNestingLevel)
+                    continue;
 
                 if (nestingLevel === previousNestingLevel) {
                     indentLevel = previousIndentLevel;
@@ -450,7 +461,7 @@ export default class CodeGenerator {
             this.assert(this.linePairings[index] === null ||
                 toLine === this.linePairings[index],
                 `${index} is already paired to ${this.linePairings[index]}, ` +
-                    `attempting pairing to: ${toLine}`);
+                `attempting pairing to: ${toLine}`);
             this.linePairings[index] = toLine;
         }
     }
@@ -461,12 +472,12 @@ export default class CodeGenerator {
         this.lineLog(`ensuring: "${string}" got "${currentValue}" in ${this.currentNode.type}`);
 
         this.assert(currentValue === string,
-            `"${currentValue}" == "${string}"`);
+            `currentValue should equal string: "${currentValue}" == "${string}"`);
 
         if (currentValue === "}" || currentValue === "]" ||
             (currentValue === ")" &&
-                (types.isFunction(this.currentNode) ||
-                    types.isCallExpression(this.parents[this.parents.length - 2])))
+            (types.isFunction(this.currentNode) ||
+            types.isCallExpression(this.parents[this.parents.length - 2])))
             || currentValue === ">") {
 
             let levelsUp = 0;
@@ -558,7 +569,7 @@ export default class CodeGenerator {
     print(node) {
         if (node.extra && node.extra.parenthesized) {
             let parenAmount = node.start - node.extra.parenStart;
-            let modifiedNode = assign({}, node, { extra: { parenthesized: false }});
+            let modifiedNode = assign({}, node, { extra: { parenthesized: false } });
 
             this.print({
                 type: "ParenthesizedExpression",
