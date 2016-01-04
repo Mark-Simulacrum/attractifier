@@ -30,7 +30,7 @@ class TextStream {
     }
 
     consumeShebang() {
-        return this.consume(/^#!.*\n/);
+        return this.consume(/(^#!.*\n)|(^#!.*$)/);
     }
 
     consumeLineComment() {
