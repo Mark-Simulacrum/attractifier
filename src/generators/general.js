@@ -6,7 +6,7 @@ export function Identifier(node) {
 }
 
 export function StringLiteral(node) {
-    this.ensure(`"${node.value}"`);
+    this.ensure(node.extra.raw);
 }
 
 export function NumericLiteral(node) {
