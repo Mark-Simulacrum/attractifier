@@ -7,7 +7,8 @@ import processTokens from "../process-tokens";
 
 function parseText(text) {
     let ast = parse(text, {
-        preserveParens: true
+        preserveParens: true,
+        plugins: ["*"]
     });
     let tokens = ast.tokens;
     let semicolons = ast.tokens.filter(token => token.type.label === ";");

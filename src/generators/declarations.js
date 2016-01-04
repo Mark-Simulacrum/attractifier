@@ -25,6 +25,11 @@ export function VariableDeclaration(node, parent) {
 }
 
 export function FunctionDeclaration(node) {
+    if (node.async) {
+        this.ensure("async");
+        this.ensureSpace();
+    }
+
     if (this.isCurrent("function")) {
         this.ensure("function");
         this.ensureSpace();

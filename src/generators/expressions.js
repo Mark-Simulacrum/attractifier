@@ -245,3 +245,9 @@ export function ArrowFunctionExpression(node) {
     this.print(node.body);
 }
 
+export function AwaitExpression(node) {
+    this.ensure("await");
+    this.ensureSpace();
+    this.print(node.argument);
+}
+
