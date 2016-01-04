@@ -21,8 +21,8 @@ export function ClassDeclaration(node) {
 
 export { ClassDeclaration as ClassExpression };
 
-export function ClassBody(node, parent) {
-    this.printNodeAs(node, parent, "BlockStatement");
+export function ClassBody(node) {
+    this.printNodeAs(node, "BlockStatement");
 }
 
 export function ClassProperty(node) {

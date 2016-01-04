@@ -598,8 +598,8 @@ export default class CodeGenerator {
         this.exitPrint(previous);
     }
 
-    printNodeAs(node, parent, type) {
-        this[type](node, parent);
+    printNodeAs(node, type) {
+        this[type](node);
     }
 
     startGroup() {
