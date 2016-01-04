@@ -65,13 +65,14 @@ export function ImportDeclaration(node) {
 }
 
 export function ImportSpecifier(node) {
-    this.print(node.local);
-
-    if (node.local && node.local !== node.imported) {
+    if (node.local.name !== node.imported.name) {
+        this.print(node.imported);
         this.ensureSpace();
         this.ensure("as");
         this.ensureSpace();
-        this.print(node.imported);
+        this.print(node.local);
+    } else {
+        this.print(node.local);
     }
 }
 
