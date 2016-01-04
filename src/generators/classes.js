@@ -51,7 +51,7 @@ export function Super() {
     this.ensure("super");
 }
 
-export function MethodDefinition(node) {
+export function ClassMethod(node) {
     if (node.static) {
         this.ensure("static");
         this.ensureSpace();

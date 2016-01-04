@@ -1,13 +1,17 @@
 import types from "../types";
 
 export function ParenthesizedExpression(node) {
-    this.ensure("(");
-    this.ensureVoid();
+    for (let i = 0; i < node.parenAmount; i++) {
+        this.ensure("(");
+        this.ensureVoid();
+    }
 
     this.print(node.expression);
 
-    this.ensureVoid();
-    this.ensure(")");
+    for (let i = 0; i < node.parenAmount; i++) {
+        this.ensureVoid();
+        this.ensure(")");
+    }
 }
 
 export function CallExpression(node) {
@@ -58,16 +62,26 @@ export function AssignmentExpression(node) {
     this.print(node.right);
 }
 
-export { AssignmentExpression as AssignmentPattern };
+export function AssignmentPattern(node) {
+    this.print(node.left);
+    this.ensureSpace();
+    this.ensure("=");
+    this.ensureSpace();
+    this.print(node.right);
+}
 
 export function ObjectExpression(node) {
     this._printContainedList("{", node.properties, "}",
         { newlines: this.nodeContainsNewlines(node), wrapSpaces: true });
 }
 
+export function ObjectMethod(node) {
+    this._method(node);
+}
+
 export { ObjectExpression as ObjectPattern };
 
-export function Property(node) {
+export function ObjectProperty(node) {
     if (node.method || node.kind === "get" || node.kind === "set") {
         if (node.kind === "get" || node.kind === "set") {
             this.ensure(node.kind);
@@ -167,8 +181,8 @@ export function NewExpression(node) {
 
     if (this.isNext("(")) {
         this.ensureVoid();
-        this._printContainedList("(", node.arguments, ")",
-            { newlines: this.nodeContainsNewlines(node) });
+        this._params(node,
+            { newlines: this.nodeContainsNewlines(node), key: "arguments" });
     }
 }
 

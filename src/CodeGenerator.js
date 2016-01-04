@@ -1,3 +1,4 @@
+import assign from "lodash.assign";
 import filter from "lodash.filter";
 import each from "lodash.foreach";
 import map from "lodash.map";
@@ -354,6 +355,7 @@ export default class CodeGenerator {
             if (types.isIdentifier(currentParent)) continue;
             if (types.isBlockStatement(currentParent) && types.isFunction(prevParent)) continue;
             if (types.is_statements(prevParent)) continue;
+            if (types.is_params(prevParent) && types.isFunction(currentParent)) continue;
 
             if (nestingLevelType(currentParent.type) !== nestingLevelType(prevParent.type)) {
                 parentCount++;
@@ -447,10 +449,10 @@ export default class CodeGenerator {
     ensure(string) {
         let currentValue = this.iterator.current();
 
-        this.lineLog("ensuring:", currentValue, "from", this.currentNode.type);
+        this.lineLog(`ensuring: "${string}" got "${currentValue}" in ${this.currentNode.type}`);
 
         this.assert(currentValue === string,
-            `current value (${currentValue}) is not equal to string (${string})`);
+            `"${currentValue}" == "${string}"`);
 
         if (currentValue === "}" || currentValue === "]" ||
             (currentValue === ")" &&
@@ -523,7 +525,6 @@ export default class CodeGenerator {
         } else {
             throw new Error(`unhandled case in ensureVoid: ${current}`);
         }
-
     }
 
     ensureNewline() {
@@ -546,15 +547,26 @@ export default class CodeGenerator {
     }
 
     print(node) {
-        let parent = this.enterPrint(node);
+        if (node.extra && node.extra.parenthesized) {
+            let parenAmount = node.start - node.extra.parenStart;
+            let modifiedNode = assign({}, node, { extra: { parenthesized: false }});
 
-        if (this[node.type]) {
-            this[node.type](node, parent);
+            this.print({
+                type: "ParenthesizedExpression",
+                expression: modifiedNode,
+                parenAmount: parenAmount
+            });
         } else {
-            throw new Error(new Error(`can't handle printing node type: ${node.type}`));
-        }
+            let parent = this.enterPrint(node);
 
-        this.exitPrint(parent);
+            if (this[node.type]) {
+                this[node.type](node, parent);
+            } else {
+                throw new Error(new Error(`can't handle printing node type: ${node.type}`));
+            }
+
+            this.exitPrint(parent);
+        }
     }
 
     /**
@@ -591,7 +603,7 @@ export default class CodeGenerator {
         this.currentNode = node;
         this.parents.push(this.currentNode);
 
-        this.lineLog(`:::print(${node.type})`);
+        this.lineLog(`:: this.enterPrint(${node.type})`);
         this.startGroup();
 
         return parent;

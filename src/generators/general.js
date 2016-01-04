@@ -5,23 +5,24 @@ export function Identifier(node) {
     this.ensure(node.name);
 }
 
-export function Literal(node) {
-    var val  = node.value;
-    var type = typeof val;
+export function StringLiteral(node) {
+    this.ensure(`"${node.value}"`);
+}
 
-    if (type === "string") {
-        this.ensure(node.raw);
-    } else if (type === "boolean") {
-        this.ensure(node.raw);
-    } else if (type === "number") {
-        this.ensure(node.raw);
-    } else if (val === null) {
-        this.ensure("null");
-    } else if (type === "object") { // RegExp
-        this.ensure(node.raw);
-    } else {
-        throw new Error("unhandled literal: " + node.raw + " type: " + type);
-    }
+export function NumericLiteral(node) {
+    this.ensure(node.extra.raw);
+}
+
+export function BooleanLiteral(node) {
+    this.ensure(node.value.toString());
+}
+
+export function RegExpLiteral(node) {
+    this.ensure(`/${node.pattern}/${node.flags}`);
+}
+
+export function NullLiteral() {
+    this.ensure("null");
 }
 
 export function TaggedTemplateExpression(node) {

@@ -1,23 +1,20 @@
 import fs from "fs";
 
-import {parse} from "babel-core";
+import {parse} from "babylon";
 
 import CodeGenerator from "../CodeGenerator";
 import processTokens from "../process-tokens";
 
 function parseText(text) {
-    let tokens = [];
-    let semicolons = [];
-
     let ast = parse(text, {
-        onToken: tokens,
-        onInsertedSemicolon(semicolon) { semicolons.push(semicolon); },
         preserveParens: true
     });
+    let tokens = ast.tokens;
+    let semicolons = ast.tokens.filter(token => token.type.label === ";");
 
     const modifiedTokens = processTokens(text, tokens, semicolons);
 
-    return { ast, tokens: modifiedTokens, semicolons };
+    return { ast: ast.program, tokens: modifiedTokens, semicolons };
 }
 
 export function formatText(text) {

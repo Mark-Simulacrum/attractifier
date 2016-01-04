@@ -31,3 +31,11 @@ let b = {
         // trailing comment
     }
 };
+
+let p = new Promise((resolve, reject) => {
+    return t;
+});
+
+let p = new Promise(function (resolve, reject) {
+    return t;
+});

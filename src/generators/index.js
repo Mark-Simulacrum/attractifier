@@ -10,8 +10,7 @@ export * from "./declarations";
 export * from "./miscellaneous";
 
 export function _statements(statements) {
-    let parent = this.enterPrint({ type: "_statements" });
-
+    const parent = this.enterPrint({ type: "_statements" });
     const startingLine = this.lines.length - 1;
 
     each(statements, (statement, index) => {
@@ -154,12 +153,11 @@ export function _params(node, { newlines, key = "params" } = {}) {
 }
 
 export function _method(node) {
-    let value = node.value;
     let kind = node.kind;
     let key = node.key;
 
     if (kind === "method" || kind === "init") {
-        if (value.generator) {
+        if (node.generator) {
             this.ensure("*");
         }
     }
@@ -169,7 +167,7 @@ export function _method(node) {
         this.ensureSpace();
     }
 
-    if (value.async) {
+    if (node.async) {
         this.ensure("async");
         this.ensureSpace();
     }
@@ -185,9 +183,9 @@ export function _method(node) {
     }
 
     this.ensureVoid();
-    this._params(value);
+    this._params(node);
     this.ensureSpace();
-    this.print(value.body);
+    this.print(node.body);
 }
 
 export function _printFlow(node) {

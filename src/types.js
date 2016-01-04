@@ -20,7 +20,7 @@ for (let i = keys.length - 1; i >= 0; i--) {
 t = assign(t, {
     isFunction(node) {
         return this.isFunctionExpression(node) || this.isFunctionDeclaration(node) ||
-            this.isMethodDefinition(node) || this.isArrowFunctionExpression(node);
+            this.isClassMethod(node) || this.isArrowFunctionExpression(node);
     },
     isExpression(node) {
         return endsWith(node.type, "Expression");
@@ -47,5 +47,8 @@ t = assign(t, {
     },
     isTemplateString(node) {
         return this.isTemplateLiteral(node) || this.isTemplateElement(node);
+    },
+    isLiteral(node) {
+        return this.isNumericLiteral(node) || this.isBooleanLiteral(node) || this.isRegExpLiteral(node) || this.isStringLiteral(node);
     }
 });

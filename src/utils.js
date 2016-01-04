@@ -49,8 +49,6 @@ class TextStream {
 export const isGreyspace = memoize(function (string) {
     let stream = new TextStream(string);
 
-    // Consume shebang
-
     while (!stream.atEnd()) {
         let consumed = stream.consumeWhitespace() ||
             stream.consumeLineComment() ||
