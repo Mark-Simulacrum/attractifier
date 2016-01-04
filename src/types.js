@@ -8,19 +8,22 @@ function isFuncGenerator(type) {
     };
 }
 
-let t = exports;
+let t = {};
 
 const keys = Object.keys(generators);
-for (let i = keys.length - 1; i >= 0; i--) {
+for (var i = 0; i < keys.length; i++) {
     let generatorName = keys[i];
 
     t[`is${generatorName}`] = isFuncGenerator(generatorName);
 }
 
-t = assign(t, {
+t = assign({}, t, {
     isFunction(node) {
         return this.isFunctionExpression(node) || this.isFunctionDeclaration(node) ||
             this.isClassMethod(node) || this.isArrowFunctionExpression(node);
+    },
+    isClass(node) {
+        return this.isClassDeclaration(node) || this.isClassExpression(node);
     },
     isExpression(node) {
         return endsWith(node.type, "Expression");
@@ -52,3 +55,5 @@ t = assign(t, {
         return this.isNumericLiteral(node) || this.isBooleanLiteral(node) || this.isRegExpLiteral(node) || this.isStringLiteral(node);
     }
 });
+
+export default t;
