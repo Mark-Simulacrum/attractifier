@@ -369,11 +369,7 @@ export default class CodeGenerator {
                 continue;
             if (types.isIdentifier(currentParent))
                 continue;
-            if (types.isBlockStatement(currentParent) && types.isFunction(prevParent))
-                continue;
             if (types.is_statements(prevParent))
-                continue;
-            if (types.is_params(prevParent) && types.isFunction(currentParent))
                 continue;
 
             if (nestingLevelType(currentParent.type) !== nestingLevelType(prevParent.type)) {

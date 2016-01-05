@@ -32,6 +32,12 @@ let b = {
     }
 };
 
+function t() {
+    let p = new Promise((resolve, reject) => {
+        return t;
+    });
+}
+
 let p = new Promise((resolve, reject) => {
     return t;
 });
@@ -48,3 +54,21 @@ assert(`${index} is already paired to ${this.linePairings[index]}, ` +
 
 assert("test" +
     "testing");
+
+function foo() {
+    return this.server.listenAsync(Config.OriginListeningAddress.port,
+        Config.OriginListeningAddress.host).tap(() => {
+            console.log("Server listening on", this.server.address());
+        });
+}
+
+
+function test() {
+    function nestedFunc() {
+        function evenMoreNestedFunc() {
+            return ta((aaa) => {
+                test;
+            });
+        }
+    }
+}
