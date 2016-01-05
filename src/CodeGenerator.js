@@ -133,7 +133,7 @@ export default class CodeGenerator {
     croak(error) {
         this.positions = this.getPositions();
 
-        error.msg += ` at ` + this.getPositionMessage();
+        error.message += ` at ` + this.getPositionMessage();
         throw error;
     }
 
