@@ -72,86 +72,11 @@ export function ExportDefaultDeclaration(node) {
     ExportDeclaration.call(this, node);
 }
 
-function ExportDeclaration(node) {
-    if (node.declaration) {
-        let declar = node.declaration;
-        this.print(declar);
-        if (types.isStatement(declar) || types.isFunction(declar) ||
-            types.isClass(declar))
-            return;
-    } else {
-        if (node.exportKind === "type") {
-            this.ensure("type");
-            this.ensureSpace();
-        }
-
-        let specifiers = node.specifiers.slice(0);
-
-        let hasSpecial = false;
-        while (true) { // eslint-disable-line no-constant-condition
-            let first = specifiers[0];
-            if (types.isExportDefaultSpecifier(first) || types.isExportNamespaceSpecifier(first)) {
-                hasSpecial = true;
-                this.print(specifiers.shift());
-                if (specifiers.length) {
-                    this.ensureVoid();
-                    this.ensure(",");
-                    this.ensureSpace();
-                }
-            } else {
-                break;
-            }
-        }
-
-        if (specifiers.length || (!specifiers.length && !hasSpecial)) {
-            this.ensure("{");
-            if (specifiers.length) {
-                this.ensureSpace();
-
-                for (let i = 0; i < specifiers.length; i++) {
-                    const specifier = specifiers[i];
-                    const isLast = i + 1 === specifiers.length;
-
-                    this.print(specifier);
-                    if (!isLast) {
-                        this.ensureVoid();
-                        this.ensure(",");
-                        this.ensureSpace();
-                    }
-                }
-
-                this.ensureSpace();
-            }
-            this.ensure("}");
-        }
-
-        if (node.source) {
-            this.ensureSpace();
-            this.ensure("from");
-            this.ensureSpace();
-            this.print(node.source);
-        }
-
-        this.ensureVoid();
-        this.ensure(";");
-    }
-}
-
-export function ImportDeclaration(node) {
-    this.ensure("import");
-    this.ensureSpace();
-
-    if (node.importKind === "type" || node.importKind === "typeof") {
-        this.ensure(node.importKind);
-        this.ensureSpace();
-    }
-
-    let specifiers = node.specifiers.slice(0);
-
+export function _processSpecifiers(specifiers, condition) {
     let hasSpecial = false;
     while (true) { // eslint-disable-line no-constant-condition
         let first = specifiers[0];
-        if (types.isImportDefaultSpecifier(first) || types.isImportNamespaceSpecifier(first)) {
+        if (condition(first)) {
             hasSpecial = true;
             this.print(specifiers.shift());
             if (specifiers.length) {
@@ -185,6 +110,49 @@ export function ImportDeclaration(node) {
         }
         this.ensure("}");
     }
+}
+
+function ExportDeclaration(node) {
+    if (node.declaration) {
+        let declar = node.declaration;
+        this.print(declar);
+        if (types.isStatement(declar) || types.isFunction(declar) ||
+            types.isClass(declar))
+            return;
+    } else {
+        if (node.exportKind === "type") {
+            this.ensure("type");
+            this.ensureSpace();
+        }
+
+        this._processSpecifiers(node.specifiers.slice(0),
+            specifier => types.isExportDefaultSpecifier(specifier) ||
+                types.isExportNamespaceSpecifier(specifier));
+
+        if (node.source) {
+            this.ensureSpace();
+            this.ensure("from");
+            this.ensureSpace();
+            this.print(node.source);
+        }
+
+        this.ensureVoid();
+        this.ensure(";");
+    }
+}
+
+export function ImportDeclaration(node) {
+    this.ensure("import");
+    this.ensureSpace();
+
+    if (node.importKind === "type" || node.importKind === "typeof") {
+        this.ensure(node.importKind);
+        this.ensureSpace();
+    }
+
+    this._processSpecifiers(node.specifiers.slice(0),
+            specifier => types.isImportDefaultSpecifier(specifier) ||
+                types.isImportNamespaceSpecifier(specifier));
 
     this.ensureSpace();
     this.ensure("from");
