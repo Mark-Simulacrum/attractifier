@@ -3,10 +3,11 @@ export default class Iterator {
         this.array = array;
         this.pos = 0;
         this.peeking = false;
+        this.charactersSeen = 0;
     }
 
     advance() {
-        this.pos++;
+        this._incrementPosition();
         if (this.atEnd()) {
             throw new Error("iterator advanced past end");
         }
@@ -14,10 +15,13 @@ export default class Iterator {
 
     advanceUnlessAtEnd() {
         if (!this.atEnd()) {
-            this.pos++;
+            this._incrementPosition();
         }
-        // console.log("advanceUnlessAtEnd", this.atEnd(), this.pos, this.peeking, this.array.length);
-        // assert(this.peeking || this.pos !== 127);
+    }
+
+    _incrementPosition() {
+        this.charactersSeen += this.current().length;
+        this.pos++;
     }
 
     peek() {

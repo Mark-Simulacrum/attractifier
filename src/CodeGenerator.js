@@ -78,15 +78,17 @@ export default class CodeGenerator {
         }) || [];
     }
 
-    getPositions() {
+    getPositions(upTo = this.input.length) {
         let positions = {};
 
         let origString = this.input;
 
+        this.assert(upTo <= this.input.length);
+
         let linesSeen = 1;
         let charsSeen = 0;
         let lastPos = 0;
-        for (let pos = 0; pos < origString.length; pos++) {
+        for (let pos = 0; pos < upTo; pos++) {
             let char = origString.charAt(pos);
 
             if (char === "\n") {
@@ -116,6 +118,7 @@ export default class CodeGenerator {
 
         // Map to parsedInput for easy access later.
         let before = "";
+        let posKeys = Object.keys(positions);
         positions = map(this.parsedInput, (element, index) => {
             before += fastJoin(this.parsedInput.slice(index - 2, index - 1));
             let pos = positions[before.length];
@@ -123,7 +126,7 @@ export default class CodeGenerator {
             if (pos) {
                 return pos;
             } else {
-                return positions[Object.keys(positions).length - 1];
+                return positions[posKeys.length - 1];
             }
         });
 
@@ -142,7 +145,8 @@ export default class CodeGenerator {
     }
 
     croak(error) {
-        this.positions = this.getPositions();
+        console.error("Error thrown, getting position.");
+        this.positions = this.getPositions(this.iterator.charactersSeen);
 
         error.message += ` at ` + this.getPositionMessage();
         throw error;
