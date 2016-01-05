@@ -245,11 +245,6 @@ export function ConditionalExpression(node) {
 }
 
 export function ArrowFunctionExpression(node) {
-    if (node.async) {
-        this.ensure("async");
-        this.ensureSpace();
-    }
-
     if (node.params.length === 1 && !this.isCurrent("(")) {
         this.print(node.params[0]);
     } else {
