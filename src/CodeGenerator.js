@@ -467,39 +467,44 @@ export default class CodeGenerator {
 
         this.lineLog(`ensuring: "${string}" got "${currentValue}" in ${this.currentNode.type}`);
 
-        this.assert(currentValue === string,
-            `currentValue should equal string: "${currentValue}" == "${string}"`);
+        if (string === ";" && currentValue !== ";") {
+            this.lineLog("missing semicolon in input, forcing insert.");
+            this.pushBlackspace(";");
+        } else {
+            this.assert(currentValue === string,
+                `currentValue should equal string: "${currentValue}" == "${string}"`);
 
-        if (currentValue === "}" || currentValue === "]" ||
-            (currentValue === ")" &&
-            (types.isFunction(this.currentNode) ||
-            types.isCallExpression(this.parents[this.parents.length - 2])))
-            || currentValue === ">") {
+            if (currentValue === "}" || currentValue === "]" ||
+                (currentValue === ")" &&
+                (types.isFunction(this.currentNode) ||
+                types.isCallExpression(this.parents[this.parents.length - 2])))
+                || currentValue === ">") {
 
-            let levelsUp = 0;
+                let levelsUp = 0;
 
-            // if the parent of the current node is _statements, then we
-            // want to use ourselves.
-            if (this.parents[this.parents.length - 2].type === "_statements" ||
-                this.currentNode.type === "_member_expression_accessor" ||
-                this.currentNode.type === "ArrayExpression") {
-                levelsUp = 1;
-            } else {
-                levelsUp = 2;
+                // if the parent of the current node is _statements, then we
+                // want to use ourselves.
+                if (this.parents[this.parents.length - 2].type === "_statements" ||
+                    this.currentNode.type === "_member_expression_accessor" ||
+                    this.currentNode.type === "ArrayExpression") {
+                    levelsUp = 1;
+                } else {
+                    levelsUp = 2;
+                }
+
+                this.assert(this.openGroups.length >= levelsUp);
+                const pairing = this.openGroups[this.openGroups.length - levelsUp];
+
+                // Only set the line pairing for the current line if we are the
+                // first blackspace being pushed onto the line
+                if (this.nestingLevels[this.nestingLevels.length - 1] === null) {
+                    this.pairLine(-1, 1, pairing);
+                }
             }
 
-            this.assert(this.openGroups.length >= levelsUp);
-            const pairing = this.openGroups[this.openGroups.length - levelsUp];
-
-            // Only set the line pairing for the current line if we are the
-            // first blackspace being pushed onto the line
-            if (this.nestingLevels[this.nestingLevels.length - 1] === null) {
-                this.pairLine(-1, 1, pairing);
-            }
+            this.pushBlackspace(currentValue);
+            this.iterator.advanceUnlessAtEnd();
         }
-
-        this.pushBlackspace(currentValue);
-        this.iterator.advanceUnlessAtEnd();
     }
 
     ensureSpace() {
@@ -545,16 +550,22 @@ export default class CodeGenerator {
 
     ensureNewline() {
         let current = this.iterator.current();
-        this.iterator.advanceUnlessAtEnd();
 
-        if (current.indexOf("\n") === -1) { // contains newline
-            current += "\n";
+        if (!isGreyspace(current)) {
+            this.lineLog(`ensureNewline(): not at greyspace node, forcing newline.`);
+            return this.pushGreyspace("\n");
+        } else {
+            this.iterator.advanceUnlessAtEnd();
+
+            if (current.indexOf("\n") === -1) { // contains newline
+                current += "\n";
+            }
+
+            current = current.replace(/^[^\S\n]\n/, "\n");
+
+            this.lineLog(`ensureNewline(): "${current}"`);
+            return this.pushGreyspace(current);
         }
-
-        current = current.replace(/^[^\S\n]\n/, "\n");
-
-        this.lineLog(`ensureNewline(): "${current}"`);
-        return this.pushGreyspace(current);
     }
 
     ensureAtEnd() {
