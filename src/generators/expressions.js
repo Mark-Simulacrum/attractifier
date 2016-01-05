@@ -147,7 +147,30 @@ export function LogicalExpression(node) {
     this.print(node.right);
 }
 
+function isSimple(node) {
+    if (types.isBinaryExpression(node)) {
+        return isSimple(node.left) && isSimple(node.right);
+    } else if (types.isNumericLiteral(node) || types.isIdentifier(node)) {
+        return true;
+    }
+
+    return false;
+}
+
 export function BinaryExpression(node) {
+    if (!this.nodeContainsNewlines(node) && isSimple(node)) {
+        this._pushLineTail(this.input.slice(node.start, node.end));
+
+        const currentNodeLength = node.end - node.start;
+        let incrementedIterator = 0;
+        while (incrementedIterator < currentNodeLength) {
+            incrementedIterator += this.iterator.current().length;
+            this.iterator.advanceUnlessAtEnd();
+        }
+
+        return;
+    }
+
     this.print(node.left);
 
     this.ensureSpace();
