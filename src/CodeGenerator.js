@@ -634,7 +634,7 @@ export default class CodeGenerator {
     }
 
     enterPrint(node) {
-        this.assert(this.currentNode);
+        this.assert(this.currentNode, "currentNode is defined");
 
         this.lineLog("setting current node to:", node.type);
 
