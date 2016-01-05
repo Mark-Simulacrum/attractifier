@@ -61,6 +61,17 @@ export default class CodeGenerator {
         }
     }
 
+    warn(...messages) {
+        messages = map(messages, message => {
+            if (typeof message === "string") {
+                return message.replace(/\n/g, "\\n");
+            } else {
+                return message;
+            }
+        });
+        console.error(`Output line #${this.lines.length - 1}:`, ...messages);
+    }
+
     getSemicolonsBeforePosition(position) {
         return filter(this.insertedSemicolons, colonPosition => {
             return colonPosition <= position;
@@ -469,6 +480,7 @@ export default class CodeGenerator {
 
         if (string === ";" && currentValue !== ";") {
             this.lineLog("missing semicolon in input, forcing insert.");
+            this.warn("Encountered missing semicolon in input. Forcing insert of semicolon.")
             this.pushBlackspace(";");
         } else {
             this.assert(currentValue === string,
