@@ -145,7 +145,7 @@ export default class CodeGenerator {
     }
 
     croak(error) {
-        console.error("Error thrown, getting position.");
+        console.error("Error thrown, getting position. Error:", error);
         this.positions = this.getPositions(this.iterator.charactersSeen);
 
         error.message += ` at ` + this.getPositionMessage();
@@ -166,12 +166,12 @@ export default class CodeGenerator {
         if (this.parsedInput.length === 0)
             return "";
 
-        timeLogStart();
+        timeLog("CodeGenerator: _generate called.")
         this._pushLineHead("", null);
 
         this.currentNode = this.ast;
         this.print(this.ast);
-        timeLog("CodeGenerator.print(this.ast)");
+        timeLog("CodeGenerator: printed AST");
 
         if (this.nestingLevels.length &&
             this.nestingLevels[this.nestingLevels.length - 1] === null) {
@@ -187,7 +187,7 @@ export default class CodeGenerator {
             }
         }
 
-        timeLog("CodeGenerator@processNestingLevels");
+        timeLog("CodeGenerator: processed nesting levels");
 
         let lines = map(this.lines, (line, index) => {
             const nestingLevel = this.nestingLevels[index];
@@ -200,23 +200,6 @@ export default class CodeGenerator {
             this.assert(indentLevel !== undefined, "indentLevel is defined");
 
             let leader = "";
-            // let table = [index, nestingLevel, indentLevel,
-            //     this.linePairings[index]];
-
-            // table = map(table, (item, index) => {
-            //     if (item === null) item = "null";
-            //     if (item === undefined) item = "undefined";
-
-            //     const itemLength = item.toString().length;
-
-            //     item += repeat(" ", 3 - itemLength);
-            //     if (index === 0) item += ":";
-
-            //     return item;
-            // });
-
-            // leader += fastJoin(table, " ")
-            // leader += repeat(" ", 20 - leader.length) + "|";
 
             if (line === "" || /^\s*$/.test(line)) {
                 return leader;
@@ -225,11 +208,11 @@ export default class CodeGenerator {
             return leader + getIndentString(indentLevel) + line;
         });
 
-        timeLog("CodeGenerator@processedLines");
+        timeLog(`CodeGenerator: processed ${lines.length} lines`);
 
         const out = fastJoin(lines, "\n");
 
-        timeLog("CodeGenerator@joinedLines");
+        timeLog("CodeGenerator: joined lines");
 
         return out;
     }
@@ -252,22 +235,21 @@ export default class CodeGenerator {
         this.assert(isGreyspace(text), `"${text}" should be greyspace`);
 
         if (text === "") {
-            return;
+            // Do nothing
         } else if (text === " ") {
             this._pushLineTail(" ", false);
-            return;
+        } else {
+            let formattedText = this._formatGreyspace(text);
+            let lines = formattedText.split("\n");
+
+            this._pushLineTail(lines.shift(), false);
+
+            for (let i = 0; i < lines.length; i++) {
+                this._pushLineHead(lines[i]);
+            }
+
+            return lines.length;
         }
-
-        let formattedText = this._formatGreyspace(text);
-        let lines = formattedText.split("\n");
-
-        this._pushLineTail(lines.shift(), false);
-
-        each(lines, line => {
-            this._pushLineHead(line);
-        });
-
-        return lines.length;
     }
 
     _pushLineHead(text) {

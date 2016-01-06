@@ -31,9 +31,7 @@ export function MemberExpression(node) {
         this.ensure("[");
         this.ensureVoid();
 
-        let prev = this.enterPrint({ type: "_member_expression_property" });
         this.print(node.property);
-        this.exitPrint(prev);
 
         this.ensureVoid();
         this.ensure("]");

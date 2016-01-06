@@ -116,17 +116,16 @@ export function log(...messages) {
 
 // import prettyTime from "pretty-hrtime";
 // let lastTime = process.hrtime();
-export function timeLogStart() {
+export function timeLogStart(event) {
     // lastTime = process.hrtime();
+    // if (event) timeLog(event);
 }
 
 export function timeLog(event) {
     // let diff = process.hrtime(lastTime);
     // if (lastTime !== null) {
     //     let nanoSeconds = diff[0] * 1e9 + diff[1];
-    //     if (nanoSeconds / 1000 > 100) { // Greater than 100 microseconds
-    //         console.log(prettyTime(diff) + ":", event);
-    //     }
+    //     console.log(prettyTime(diff) + ":", event);
     // }
     // lastTime = process.hrtime();
 }
