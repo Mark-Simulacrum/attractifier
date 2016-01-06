@@ -147,7 +147,8 @@ export function LogicalExpression(node) {
 
 function isSimple(node) {
     if (types.isBinaryExpression(node)) {
-        return isSimple(node.left) && isSimple(node.right);
+        return (node.operator === "*" || node.operator === "/" || node.operator === "**") &&
+            isSimple(node.left) && isSimple(node.right);
     } else if (types.isNumericLiteral(node) || types.isIdentifier(node)) {
         return true;
     }
