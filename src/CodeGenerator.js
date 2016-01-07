@@ -10,7 +10,7 @@ import {
     isGreyspace,
     log,
     timeLog,
-    timeLogStart,
+    timeLogStart, // eslint-disable-line
     getIndentString,
     nestingLevelType,
     isSingleLineWhitespace,
@@ -168,7 +168,7 @@ export default class CodeGenerator {
         if (this.parsedInput.length === 0)
             return "";
 
-        timeLog("CodeGenerator: _generate called.")
+        timeLog("CodeGenerator: _generate called.");
         this._pushLineHead("", null);
 
         this.currentNode = this.ast;
@@ -466,7 +466,7 @@ export default class CodeGenerator {
 
         if (string === ";" && currentValue !== ";") {
             this.lineLog("missing semicolon in input, forcing insert.");
-            this.warn("Encountered missing semicolon in input. Forcing insert of semicolon.")
+            this.warn("Encountered missing semicolon in input. Forcing insert of semicolon.");
             this.pushBlackspace(";");
         } else {
             this.assert(currentValue === string,
