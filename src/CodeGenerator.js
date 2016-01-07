@@ -13,6 +13,8 @@ import {
     timeLogStart,
     getIndentString,
     nestingLevelType,
+    isSingleLineWhitespace,
+    isWhitespace,
     shouldWrite as WillWrite
 } from "./utils";
 
@@ -201,7 +203,7 @@ export default class CodeGenerator {
 
             let leader = "";
 
-            if (line === "" || /^\s*$/.test(line)) {
+            if (line === "" || isWhitespace(line)) {
                 return leader;
             }
 
@@ -271,9 +273,7 @@ export default class CodeGenerator {
             this.nestingLevels[this.nestingLevels.length - 1] === null) {
 
             let nestingLevel = this.getNestingLevel();
-            if (nestingLevel !== null) {
-                this.nestingLevels[this.nestingLevels.length - 1] = nestingLevel;
-            }
+            this.nestingLevels[this.nestingLevels.length - 1] = nestingLevel;
         }
     }
 
@@ -478,7 +478,7 @@ export default class CodeGenerator {
                 types.isCallExpression(this.parents[this.parents.length - 2])))
                 || currentValue === ">") {
 
-                let levelsUp = 0;
+                let levelsUp = 2;
 
                 // if the parent of the current node is _statements, then we
                 // want to use ourselves.
@@ -486,16 +486,13 @@ export default class CodeGenerator {
                     this.currentNode.type === "_member_expression_accessor" ||
                     this.currentNode.type === "ArrayExpression") {
                     levelsUp = 1;
-                } else {
-                    levelsUp = 2;
                 }
-
-                this.assert(this.openGroups.length >= levelsUp);
-                const pairing = this.openGroups[this.openGroups.length - levelsUp];
 
                 // Only set the line pairing for the current line if we are the
                 // first blackspace being pushed onto the line
                 if (this.nestingLevels[this.nestingLevels.length - 1] === null) {
+                    this.assert(this.openGroups.length >= levelsUp);
+                    const pairing = this.openGroups[this.openGroups.length - levelsUp];
                     this.pairLine(-1, 1, pairing);
                 }
             }
@@ -515,11 +512,11 @@ export default class CodeGenerator {
             types.isFunction(this.currentNode);
 
         if (
-            (allowNewlines && /^[^\S\n]*$/.test(current)) ||
-            (!allowNewlines && /^\s*$/.test(current))) {
+            (allowNewlines && isSingleLineWhitespace(current)) ||
+            (!allowNewlines && isWhitespace(current))) {
             this.pushGreyspace(" ");
         } else if (isGreyspace(current)) {
-            if (!/\n/.test(current)) {
+            if (current.indexOf("\n") === -1) {
                 current = this._spaceWrap(current);
             }
 
@@ -536,8 +533,7 @@ export default class CodeGenerator {
         this.iterator.advanceUnlessAtEnd();
         this.lineLog(`ensureVoid(): "${current}"`);
 
-        // current is whitespace (not including newlines)
-        if (/^[^\S\n]*$/.test(current)) {
+        if (isSingleLineWhitespace(current)) {
             return this.pushGreyspace("");
         } else if (isGreyspace(current)) {
             return this.pushGreyspace(current);
@@ -642,32 +638,8 @@ export default class CodeGenerator {
         this.lineLog("restoring current node to:", this.currentNode.type);
     }
 
-    /**
-     * Returns the start and end positions of a given AST node.
-     *
-     * If the node is an array, returns the start property
-     * of the first node in the array, and the end property
-     * of the last node in the array.
-     */
-    _getRange(node) {
-        let start = node.start;
-        let end = node.end;
-
-        if (Array.isArray(node)) {
-            if (node.length > 0) {
-                start = node[0].start;
-                end = node[node.length - 1].end;
-            } else {
-                return false;
-            }
-        }
-
-        return { start, end };
-    }
-
     nodeContainsNewlines(node) {
-        let { start, end } = this._getRange(node);
-        return this.input.slice(start, end).indexOf("\n") >= 0;
+        return node.loc.start.line !== node.loc.end.line;
     }
 }
 

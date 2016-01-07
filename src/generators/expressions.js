@@ -166,17 +166,15 @@ export function BinaryExpression(node) {
             incrementedIterator += this.iterator.current().length;
             this.iterator.advanceUnlessAtEnd();
         }
+    } else {
+        this.print(node.left);
 
-        return;
+        this.ensureSpace();
+        this.ensure(node.operator);
+        this.ensureSpace();
+
+        this.print(node.right);
     }
-
-    this.print(node.left);
-
-    this.ensureSpace();
-    this.ensure(node.operator);
-    this.ensureSpace();
-
-    this.print(node.right);
 }
 
 export function UpdateExpression(node) {

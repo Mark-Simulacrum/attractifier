@@ -97,6 +97,15 @@ export const getIndentString = memoize(function (indentLevel) {
     return repeat(" ", indentLevel * 4);
 });
 
+
+export const isWhitespace = function (string) {
+    return /^\s*$/.test(string);
+};
+
+export const isSingleLineWhitespace = function (string) {
+    return /^[^\S\n]*$/.test(string);
+};
+
 export let shouldWrite = true;
 export function log(...messages) {
     if (!shouldWrite) return;

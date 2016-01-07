@@ -2,7 +2,6 @@ export default class Iterator {
     constructor(array) {
         this.array = array;
         this.pos = 0;
-        this.peeking = false;
         this.charactersSeen = 0;
     }
 
@@ -27,7 +26,7 @@ export default class Iterator {
     peek() {
         let iter = new Iterator(this.array);
         iter.pos = this.pos;
-        iter.peeking = true;
+        iter.charactersSeen = this.charactersSeen;
         return iter;
     }
 
