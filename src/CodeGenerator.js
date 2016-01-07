@@ -553,7 +553,17 @@ export default class CodeGenerator {
 
     print(node) {
         if (node.extra && node.extra.parenthesized) {
-            let parenAmount = node.start - node.extra.parenStart;
+            let slice = this.input.slice(node.extra.parenStart, node.start);
+            let parenAmount = 0;
+
+            for (let i = 0; i < slice.length; i++) {
+                if (slice.charAt(i) === "(") {
+                    parenAmount++;
+                } else {
+                    break;
+                }
+            }
+
             let modifiedNode = assign({}, node, { extra: { parenthesized: false } });
 
             this.print({
