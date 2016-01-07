@@ -415,24 +415,8 @@ export default class CodeGenerator {
         return indentLevel;
     }
 
-    _spaceWrap(string, { leading = true, trailing = true } = {}) {
-        if (leading) {
-            if (/^\s/.test(string)) {
-                string = string.replace(/^[^\S\n]+/, " ");
-            } else {
-                string = " " + string;
-            }
-        }
-
-        if (trailing) {
-            if (/\s$/.test(string)) {
-                string = string.replace(/[^\S\n]+$/, " ");
-            } else {
-                string += " ";
-            }
-        }
-
-        return string;
+    _spaceWrap(string) {
+        return " " + string.trim() + " ";
     }
 
     isCurrent(string) {
