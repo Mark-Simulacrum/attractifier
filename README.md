@@ -1,4 +1,7 @@
 # attractifier
+
+[![Build Status](https://travis-ci.org/Mark-Simulacrum/attractifier.svg)](https://travis-ci.org/Mark-Simulacrum/attractifier)
+
 Depends on [node](https://nodejs.org/).
 
 Supports ES6/ES2015.
