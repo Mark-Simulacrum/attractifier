@@ -551,7 +551,7 @@ export default class CodeGenerator {
         } else {
             this.iterator.advanceUnlessAtEnd();
 
-            if (current.indexOf("\n") === -1) { // contains newline
+            if (current.indexOf("\n") === -1) {
                 current += "\n";
             }
 
