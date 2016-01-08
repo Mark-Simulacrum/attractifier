@@ -30,7 +30,7 @@ function fastJoin(array, joiner = "") {
 }
 
 export default class CodeGenerator {
-    constructor(ast, input, parsedInput, insertedSemicolons) {
+    constructor(ast, input, parsedInput) {
         this.ast = ast;
         this.input = input;
         this.iterator = new Iterator(parsedInput);
@@ -46,7 +46,6 @@ export default class CodeGenerator {
         this.lines = [];
 
         this.parsedInput = parsedInput;
-        this.insertedSemicolons = insertedSemicolons;
         this.positions = null;
     }
 
@@ -75,9 +74,7 @@ export default class CodeGenerator {
     }
 
     getSemicolonsBeforePosition(position) {
-        return filter(this.insertedSemicolons, colonPosition => {
-            return colonPosition <= position;
-        }) || [];
+        return filter(this.input.slice(0, position).split(""), a => a === ";").length;
     }
 
     getPositions(upTo = this.input.length) {
@@ -105,7 +102,7 @@ export default class CodeGenerator {
                 column: charsSeen
             };
 
-            let semisBefore = this.getSemicolonsBeforePosition(pos).length;
+            let semisBefore = this.getSemicolonsBeforePosition(pos);
             let newPos = pos + semisBefore;
 
             if (newPos === pos) {

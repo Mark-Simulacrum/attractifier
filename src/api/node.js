@@ -18,9 +18,9 @@ function parseText(text) {
     let tokens = ast.tokens;
     let semicolons = ast.tokens.filter(token => token.type.label === ";");
 
+    timeLogStart();
     const modifiedTokens = processTokens(text, tokens, semicolons);
-
-    timeLog("processed tokens");
+    timeLog(`processed ${tokens.length} -> ${modifiedTokens.length} tokens`);
 
     return { ast: ast.program, tokens: modifiedTokens, semicolons };
 }
@@ -35,7 +35,7 @@ export function formatText(text) {
 
 export function formatFile(filename) {
     try {
-        timeLogStart("reading file");
+        timeLogStart();
         const text = fs.readFileSync(filename).toString();
         timeLog("finished reading file");
 
