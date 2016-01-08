@@ -1,6 +1,5 @@
 import assign from "lodash.assign";
 import filter from "lodash.filter";
-import each from "lodash.foreach";
 import map from "lodash.map";
 
 import Iterator from "./iterator";
@@ -20,12 +19,14 @@ import {
 
 function fastJoin(array, joiner = "") {
     let string = "";
-    each(array, function (element, index) {
+    const len = array.length;
+    for (let i = len; i > 0; i--) {
+        let element = array[len - i];
         string += element;
-        if (index + 1 !== array.length) {
+        if (i !== 1) {
             string += joiner;
         }
-    });
+    }
     return string;
 }
 

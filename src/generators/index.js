@@ -1,5 +1,3 @@
-import each from "lodash.foreach";
-
 export * from "./flow";
 export * from "./general";
 export * from "./modules";
@@ -13,10 +11,11 @@ export function _statements(statements) {
     const parent = this.enterPrint({ type: "_statements" });
     const startingLine = this.lines.length - 1;
 
-    each(statements, (statement, index) => {
-        this.print(statement);
+    const len = statements.length;
+    for (let i = len; i > 0; i--) {
+        this.print(statements[len - i]);
 
-        if (index + 1 !== statements.length) {
+        if (len !== 1) {
             this.ensureNewline();
         } else {
             const pushedLines = this.ensureNewline();
@@ -24,7 +23,7 @@ export function _statements(statements) {
                 this.pairLine(-2, pushedLines - 1, startingLine);
             }
         }
-    });
+    }
 
     this.exitPrint(parent);
 }
