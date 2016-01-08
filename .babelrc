@@ -1,4 +1,5 @@
 {
-    "optional": ["es7.exportExtensions"],
-    "sourceMaps": "inline"
+	"sourceMaps": "inline",
+	"presets": ["es2015"],
+	"plugins": ["transform-export-extensions"]
 }

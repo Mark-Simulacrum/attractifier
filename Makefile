@@ -19,4 +19,4 @@ build-watch: npm-install create-lib
 	node_modules/.bin/babel --out-dir lib --watch src
 
 check:
-	node_modules/.bin/mocha --compilers js:babel/register tests/index.js
+	node_modules/.bin/mocha --compilers js:babel-core/register tests/index.js
