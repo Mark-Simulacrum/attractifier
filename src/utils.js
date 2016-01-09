@@ -123,18 +123,31 @@ export function log(...messages) {
     }
 }
 
-// import prettyTime from "pretty-hrtime";
-// let lastTime = process.hrtime();
+let prettyTime;
+let lastTime = process.hrtime();
 export function timeLogStart(event) {
-    // lastTime = process.hrtime();
-    // if (event) timeLog(event);
+    lastTime = process.hrtime();
+    if (event) {
+        timeLog(event);
+    }
 }
 
+const LOG_TIMING = process.env.LOG_TIMING;
+if (LOG_TIMING) {
+    try {
+        if (require.resolve("pretty-hrtime")) {
+            prettyTime = require("pretty-hrtime");
+        }
+    } catch (e) {
+        console.error("Attempted to log timing events, but pretty-hrtime was not installed.");
+    }
+}
 export function timeLog(event) {
-    // let diff = process.hrtime(lastTime);
-    // if (lastTime !== null) {
-    //     let nanoSeconds = diff[0] * 1e9 + diff[1];
-    //     console.log(prettyTime(diff) + ":", event);
-    // }
-    // lastTime = process.hrtime();
+    let diff = process.hrtime(lastTime);
+    if (LOG_TIMING && prettyTime) {
+        if (lastTime !== null) {
+            console.error(prettyTime(diff) + ":", event);
+        }
+        lastTime = process.hrtime();
+    }
 }
