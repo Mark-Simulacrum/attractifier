@@ -355,9 +355,11 @@ export default class CodeGenerator {
         //
         // Optimize currentNode being part of parents by adding it in here,
         // instead of cloning entire parents array each time.
-        for (let i = 3; i < parents.length + 1; i++) {
+        const len = parents.length;
+        const iterEnd = parents.length + 1;
+        for (let i = 3; i < iterEnd; i++) {
             let prevParent = parents[i - 1];
-            let currentParent = i === parents.length ? this.currentNode : parents[i];
+            let currentParent = i === len ? this.currentNode : parents[i];
 
             // ignore function body that AST disguises as BlockStatement
             if (types.isFunction(currentParent))

@@ -1,30 +1,29 @@
 import {isGreyspace} from "./utils";
 
-export default function processTokens(input, tokens) {
-    let modifiedTokens = []; // Start off with void greyspace
-    modifiedTokens.push("");
+let sawGreyspace = true;
+function addToken(arr, str, start, end) {
+    const token = str.slice(start, end);
+    const isGrey = isGreyspace(token);
 
-    let sawGreyspace = true;
-    function addToken(start, end) {
-        const token = input.slice(start, end);
-        const isGrey = isGreyspace(token);
-
-        // If both the last token and the current token are not greyspace,
-        // we need to add a void greyspace in between.
-        if (!sawGreyspace && !isGrey) {
-            modifiedTokens.push("");
-        }
-
-        // If both the last token and the current token are greyspace,
-        // they should be merged.
-        if (sawGreyspace && isGrey) {
-            modifiedTokens[modifiedTokens.length - 1] += token;
-        } else {
-            modifiedTokens.push(token);
-        }
-
-        sawGreyspace = isGrey;
+    // If both the last token and the current token are not greyspace,
+    // we need to add a void greyspace in between.
+    if (!sawGreyspace && !isGrey) {
+        arr.push("");
     }
+
+    // If both the last token and the current token are greyspace,
+    // they should be merged.
+    if (sawGreyspace && isGrey) {
+        arr[arr.length - 1] += token;
+    } else {
+        arr.push(token);
+    }
+
+    sawGreyspace = isGrey;
+}
+
+export default function processTokens(input, tokens) {
+    let modifiedTokens = [""]; // Start off with void greyspace
 
     let lastTokenEnd = 0;
     const tokenLength = tokens.length;
@@ -35,10 +34,10 @@ export default function processTokens(input, tokens) {
 
         // Add space in between previous token and this token
         if (lastTokenEnd !== start) {
-            addToken(lastTokenEnd, start);
+            addToken(modifiedTokens, input, lastTokenEnd, start);
         }
 
-        addToken(start, end);
+        addToken(modifiedTokens, input, start, end);
 
         lastTokenEnd = end;
     }
