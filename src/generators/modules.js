@@ -89,7 +89,7 @@ export function _processSpecifiers(specifiers, condition) {
         }
     }
 
-    if (specifiers.length || (!specifiers.length && !hasSpecial)) {
+    if (specifiers.length > 0) {
         this.ensure("{");
         if (specifiers.length) {
             this.ensureSpace();
@@ -154,9 +154,11 @@ export function ImportDeclaration(node) {
             specifier => types.isImportDefaultSpecifier(specifier) ||
                 types.isImportNamespaceSpecifier(specifier));
 
-    this.ensureSpace();
-    this.ensure("from");
-    this.ensureSpace();
+    if (node.specifiers.length > 0) {
+        this.ensureSpace();
+        this.ensure("from");
+        this.ensureSpace();
+    }
     this.print(node.source);
 
     this.ensureVoid();
