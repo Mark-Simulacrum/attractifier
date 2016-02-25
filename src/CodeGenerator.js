@@ -312,6 +312,10 @@ export default class CodeGenerator {
             if (index === 0)
                 return line;
 
+            // Just return end-lines if there's something but "*/" on them
+            if (index == lines.length - 1 && !/^\s*\*\/\s*$/.test(line))
+                return line;
+
             const isLast = index + 1 === lines.length;
             let replacement = " *";
             if (!isLast)

@@ -8,6 +8,9 @@
  * Foobar
  */
 
+/* Tests an HTTP proxy with a Headman eCAP adapter
+ * configured to hide and reveal empty Content-Type headers. */
+
 let a = // test
     bar;
 
