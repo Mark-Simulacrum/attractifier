@@ -1,8 +1,12 @@
 // simple newline after every element
-let a = b;
+let a
+    =
+    b;
 
 // extended newline
-let a = b;
+let a
+    =
+    b;
 
 // comment in the middle
 let

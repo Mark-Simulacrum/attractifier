@@ -495,22 +495,46 @@ export default class CodeGenerator {
 
         this.lineLog(`ensureSpace("${current}")`);
 
-        // current is whitespace (not including newlines)
-        const allowNewlines = types.isExpressionLike(this.currentNode) ||
+        this.assert(isGreyspace(current));
+
+        const allowNewline =
+            types.isVariableDeclarator(this.currentNode);
+
+        const allowNewlines =
+            types.isExpressionLike(this.currentNode) ||
             types.isFunction(this.currentNode);
 
-        if (
-            (allowNewlines && isSingleLineWhitespace(current)) ||
-            (!allowNewlines && isWhitespace(current))) {
-            this.pushGreyspace(" ");
-        } else if (isGreyspace(current)) {
-            if (current.indexOf("\n") === -1) {
-                current = this._spaceWrap(current);
-            }
+        const isGrey = isGreyspace(current);
+        const isWhite = isWhitespace(current);
+        const isOneLine = isSingleLineWhitespace(current);
 
-            this.pushGreyspace(current);
+        // if just whitespace and no newlines:
+        //  push a single space
+        // if greyspace and NOT whitespace
+        //  single line: space wrapped
+        //  multiple lines: just push
+
+        const lines = current.split("\n").length - 1;
+        this.lineLog(`ensureSpace: "${current}", ${lines}, ${isGrey}, ${isWhite}`);
+
+        if (isWhite) {
+            if (lines === 0) {
+                this.pushGreyspace(" ");
+            } else {
+                if (allowNewlines) {
+                    this.pushGreyspace(current);
+                } else if (allowNewline) {
+                    this.pushGreyspace("\n");
+                } else {
+                    this.pushGreyspace(" ");
+                }
+            }
         } else {
-            throw new Error(`ensuring space with not a space: "${current}"`);
+            if (lines === 0) {
+                this.pushGreyspace(this._spaceWrap(current));
+            } else {
+                this.pushGreyspace(current);
+            }
         }
 
         this.iterator.advanceUnlessAtEnd();
