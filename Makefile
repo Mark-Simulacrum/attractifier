@@ -1,4 +1,4 @@
-.PHONY: check all npm-install create-lib build-without-logging build-watch
+.PHONY: check check-no-install all npm-install create-lib build-without-logging build-watch
 
 all: npm-install build-without-logging
 
@@ -18,5 +18,7 @@ build-without-logging: npm-install create-lib
 build-watch: npm-install create-lib
 	node_modules/.bin/babel --out-dir lib --watch src
 
-check: npm-install
+check-no-install:
 	node_modules/.bin/mocha --compilers js:babel-core/register tests/index.js
+
+check: npm-install check-no-install
