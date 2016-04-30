@@ -19,7 +19,7 @@
     "mocha": "^2.2.5",
     "pretty-hrtime": "^1.0.0"
   },
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "JavaScript pretty printer, built for speed and ES2015.",
   "main": "./lib/api/node.js",
   "repository": {
