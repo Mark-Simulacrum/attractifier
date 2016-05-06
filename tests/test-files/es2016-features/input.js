@@ -4,8 +4,7 @@ async function test() {
     await Promise.resolve(foobar);
 }
 
-async function Test(take, callback) {
-}
+async function Test(take, callback) {}
 
 let resolver;
 let promise = new Promise((resolve) => {

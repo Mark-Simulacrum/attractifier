@@ -103,7 +103,7 @@ export const isWhitespace = function (string) {
 };
 
 export const isSingleLineWhitespace = function (string) {
-    return /^[^\S\n]*$/.test(string);
+    return /^[^\S\n]*\n?$/.test(string);
 };
 
 export let shouldWrite = true;
