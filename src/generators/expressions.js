@@ -265,3 +265,17 @@ export function AwaitExpression(node) {
     this.print(node.argument);
 }
 
+export function YieldExpression(node) {
+    this.ensure("yield");
+
+    if (node.delegate) {
+        this.ensureVoid();
+        this.ensure("*");
+        this.ensureSpace();
+    }
+
+    if (node.argument) {
+        this.ensureSpace();
+        this.print(node.argument);
+    }
+}
