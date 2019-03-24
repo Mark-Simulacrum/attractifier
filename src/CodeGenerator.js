@@ -472,7 +472,8 @@ export default class CodeGenerator {
                 // want to use ourselves.
                 if (this.parents[this.parents.length - 2].type === "_statements" ||
                     this.currentNode.type === "_member_expression_accessor" ||
-                    this.currentNode.type === "ArrayExpression") {
+                    this.currentNode.type === "ArrayExpression" ||
+                    this.currentNode.type === "ObjectExpression") {
                     levelsUp = 1;
                 }
 

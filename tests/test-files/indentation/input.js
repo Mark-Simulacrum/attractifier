@@ -72,3 +72,40 @@ function test() {
         }
     }
 }
+
+Config.Recognize([
+    {
+        option: "speed",
+        type: "String",
+        enum: [ "fast", "slow" ],
+        default: "slow",
+        description: "expected response speed",
+    },
+    {
+        option: "bucket-speed-limit",
+        type: "Number",
+        default: "50000",
+        description: "response_delay_pool's bucket_speed_limit",
+    },
+    {
+        option: "aggregate-speed-limit",
+        type: "Number",
+        description: "response_delay_pool's aggregate_speed_limit",
+    }
+]);
+
+let a = {
+    option: "speed",
+    bar: function () {
+        return;
+    },
+};
+
+function bar() {
+    let a = {
+        option: "speed",
+        bar: function () {
+            return;
+        },
+    };
+}
