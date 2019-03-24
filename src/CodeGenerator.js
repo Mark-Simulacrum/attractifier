@@ -502,8 +502,7 @@ export default class CodeGenerator {
             types.isVariableDeclarator(this.currentNode);
 
         const allowNewlines =
-            types.isExpressionLike(this.currentNode) ||
-            types.isFunction(this.currentNode);
+            types.isExpressionLike(this.currentNode);
 
         const isGrey = isGreyspace(current);
         const isWhite = isWhitespace(current);
