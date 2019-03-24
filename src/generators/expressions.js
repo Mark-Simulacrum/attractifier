@@ -48,7 +48,10 @@ export function MemberExpression(node) {
 }
 
 export function ArrayExpression(node) {
-    this._printContainedList("[", node.elements, "]", { newlines: false, wrapSpaces: true });
+    this._printContainedList("[", node.elements, "]", {
+        newlines: this.nodeContainsNewlines(node),
+        wrapSpaces: false,
+    });
 }
 
 export { ArrayExpression as ArrayPattern };
