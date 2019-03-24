@@ -7,4 +7,4 @@ export class A {}
 export default class A {}
 export { ClassDeclaration as ClassExpression };
 export * as foo from "bar";
-export foo from "bar";
+export foot from "bar";
