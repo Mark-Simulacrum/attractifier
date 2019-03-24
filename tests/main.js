@@ -1,5 +1,3 @@
-import "source-map-support/register";
-
 import assert from "assert";
 import each from "lodash.foreach";
 import path from "path";

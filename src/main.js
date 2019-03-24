@@ -4,8 +4,6 @@
  * Bin file for executing attractifier.
  * Node API in api/node.js.
  */
-import sourceMapSupport from 'source-map-support'
-sourceMapSupport.install();
 
 import { formatFile } from "./api/node";
 
