@@ -158,6 +158,7 @@ export function _method(node) {
     if (kind === "method" || kind === "init") {
         if (node.generator) {
             this.ensure("*");
+            this.ensureVoid();
         }
     }
 
