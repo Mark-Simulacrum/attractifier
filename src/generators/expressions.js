@@ -22,6 +22,10 @@ export function CallExpression(node) {
     this._params(node, { key: "arguments" });
 }
 
+export function Import() {
+    this.ensure("import");
+}
+
 export function MemberExpression(node) {
     this.print(node.object);
     this.ensureVoid();
