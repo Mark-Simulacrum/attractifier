@@ -115,7 +115,7 @@ export function log(...messages) {
     } catch (error) {
         shouldWrite = false;
 
-        if (error.code === "EBADF") {
+        if (error.code === "EBADF" || error.code == "ENXIO") {
             return;
         } else {
             throw error;
