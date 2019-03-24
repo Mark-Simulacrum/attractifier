@@ -7,11 +7,5 @@ cache:
   directories:
   - node_modules
 
-node_js:
- - stable
- - "4.0"
- - iojs
- - "0.10"
- - "0.12"
-
-script: make && make check
+script:
+    - npm install && npm test
