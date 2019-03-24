@@ -20,9 +20,9 @@
     "mocha": "^2.2.5",
     "pretty-hrtime": "^1.0.0"
   },
-  "version": "1.6.3",
+  "version": "2.0.0",
   "description": "JavaScript pretty printer, built for speed and ES2015.",
-  "main": "./lib/api/node.js",
+  "main": "./src/api/node.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/Mark-Simulacrum/attractifier.git"
@@ -36,6 +36,6 @@
     "lib",
     "LICENSE"
   ],
-  "bin": "./lib/index.js",
+  "bin": "./src/index.js",
   "homepage": "https://github.com/Mark-Simulacrum/attractifier/blob/master/README.md"
 }
