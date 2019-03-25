@@ -5,7 +5,7 @@
  * Node API in api/node.js.
  */
 
-import { formatFile } from "./api/node";
+import { formatText, formatFile } from "./api/node";
 
 const inputFile = process.argv[2];
 try {
@@ -14,7 +14,18 @@ try {
         process.exit(1);
     }
 
-    process.stdout.write(formatFile(inputFile));
+    if (inputFile === "-") {
+        process.stdin.on('readable', () => {
+            let body = "";
+            let chunk;
+            while ((chunk = process.stdin.read()) !== null) {
+                body += chunk;
+            }
+            process.stdout.write(formatText(body));
+        });
+    } else {
+        process.stdout.write(formatFile(inputFile));
+    }
 } catch (error) {
     if (error.message.indexOf(inputFile) !== 0) {
         error.message = `${inputFile}: ${error.message}`;
