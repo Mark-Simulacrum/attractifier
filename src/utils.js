@@ -106,20 +106,14 @@ export const isSingleLineWhitespace = function (string) {
     return /^[^\S\n]*\n?$/.test(string);
 };
 
-export let shouldWrite = true;
+export let shouldWrite = process.env.DEBUG_ATTRACTIFIER;
 export function log(...messages) {
     if (!shouldWrite) return;
     let data = messages.join(" ") + "\n";
     try {
-        fs.writeSync(3, data);
+        process.stderr.write(data);
     } catch (error) {
         shouldWrite = false;
-
-        if (error.code === "EBADF" || error.code == "ENXIO") {
-            return;
-        } else {
-            throw error;
-        }
     }
 }
 
