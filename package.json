@@ -18,7 +18,7 @@
   "scripts": {
     "test": "mocha tests/index.js"
   },
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "JavaScript pretty printer, built for speed and ES2015.",
   "main": "src/api/node.js",
   "repository": {
